@@ -6,6 +6,8 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-27
+
 ### Fixed
 
 - Cluster `hub-db` with `backup.enabled: false` no longer renders a null `spec.plugins` (rejected by schema
