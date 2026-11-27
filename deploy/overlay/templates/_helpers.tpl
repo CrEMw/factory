@@ -92,3 +92,16 @@ checksum/hub-seed: {{ .Values.hub.seed.files | toJson | sha256sum | quote }}
 {}
 {{- end }}
 {{- end }}
+
+{{/* CNPG plugins of Cluster hub-db: plugin-barman-cloud writes backups and WAL to the ObjectStore hub-db-backups
+when backup.enabled; else an empty list, not null (a null plugins fails schema validation of the Cluster). */}}
+{{- define "hub.db-plugins" -}}
+{{- if .Values.backup.enabled }}
+- name: barman-cloud.cloudnative-pg.io
+  isWALArchiver: true
+  parameters:
+    barmanObjectName: hub-db-backups
+{{- else -}}
+[]
+{{- end }}
+{{- end }}
