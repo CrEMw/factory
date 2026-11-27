@@ -6,6 +6,15 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-27
+
+### Added
+
+- `hub.seed.files` in the chart values: installation seeds as `{<path>: <content>}`, rendered into the ConfigMap
+  `hub-seed`, mounted at `HUB_SEED_DIR` with `HUB_SEED_REQUIRED` true; a changed seed rolls `hub`.
+
+## [0.1.0] - 2026-11-27
+
 ### Added
 
 - Initial public release of the ticket hub engine under the Apache License 2.0.

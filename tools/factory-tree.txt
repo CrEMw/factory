@@ -51,6 +51,7 @@ deploy/chart/templates/hub/db-hub.yaml
 deploy/chart/templates/hub/db-migrate.yaml
 deploy/chart/templates/hub/db.yaml
 deploy/chart/templates/hub/deployment.yaml
+deploy/chart/templates/hub/seed.yaml
 deploy/chart/templates/hub/service.yaml
 deploy/chart/values.yaml
 deploy/overlay/templates/_helpers.tpl
@@ -74,6 +75,7 @@ deploy/overlay/templates/hub/db-hub.yaml
 deploy/overlay/templates/hub/db-migrate.yaml
 deploy/overlay/templates/hub/db.yaml
 deploy/overlay/templates/hub/deployment.yaml
+deploy/overlay/templates/hub/seed.yaml
 deploy/overlay/values.yaml
 docs/chart.md
 docs/configuration.md

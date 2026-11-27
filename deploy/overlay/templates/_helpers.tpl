@@ -42,6 +42,9 @@
 {{- if regexMatch "(SECRET|PASSWORD|TOKEN|PRIVATE_KEY)" (upper $k) }}
 {{- fail (printf "env %s: a secret does not go into values env, where it lands in the Deployment spec as plain text; use secrets.remoteKeys (docs/configuration.md)" $k) }}
 {{- end }}
+{{- if and (has $k (list "HUB_SEED_DIR" "HUB_SEED_REQUIRED")) $.root.Values.hub.seed.files }}
+{{- fail (printf "env %s: set by hub.seed.files, not in hub.env" $k) }}
+{{- end }}
 {{- $out = append $out (dict "name" $k "value" (toString $v)) }}
 {{- end }}
 {{- if $out }}{{ toYaml $out }}{{ end }}
@@ -59,5 +62,33 @@ in list order: one secret hub-caller-<name> with the file <name> each (src/calle
     items:
       - key: secret
         path: {{ . }}
+{{- end }}
+{{- end }}
+
+{{/* hub.seed.files (path: content) as ConfigMap data: a ConfigMap key cannot hold "/", so links/a.jsonl is the key
+links__a.jsonl and the volume maps it back (hub.seed-items). A path is a file name or one directory and a file name. */}}
+{{- define "hub.seed-data" -}}
+{{- range $path, $body := .Values.hub.seed.files }}
+{{- if or (not (regexMatch "^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)?$" $path)) (contains "__" $path) (hasPrefix "." $path) }}
+{{- fail (printf "hub.seed.files: %q is not a seed path (a file name or dir/file, letters, digits, . _ -, no __)" $path) }}
+{{- end }}
+{{ replace "/" "__" $path | quote }}: {{ toString $body | quote }}
+{{- end }}
+{{- end }}
+
+{{/* The items of the volume seed of hub: each ConfigMap key back at its path under HUB_SEED_DIR. */}}
+{{- define "hub.seed-items" -}}
+{{- range $path, $_ := .Values.hub.seed.files }}
+- key: {{ replace "/" "__" $path | quote }}
+  path: {{ $path | quote }}
+{{- end }}
+{{- end }}
+
+{{/* Pod annotations of hub: the hash of hub.seed.files when set, else none. */}}
+{{- define "hub.seed-annotations" -}}
+{{- if .Values.hub.seed.files }}
+checksum/hub-seed: {{ .Values.hub.seed.files | toJson | sha256sum | quote }}
+{{- else -}}
+{}
 {{- end }}
 {{- end }}

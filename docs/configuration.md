@@ -182,7 +182,8 @@ Two optional entrances to hub-web.
 | `hub.instance.documentLinkLabels` | `null` | `HUB_DOCUMENT_LINK_LABELS`, as a YAML map rendered to JSON. |
 | `hub.migrations.source` | `baseline` | `HUB_MIGRATIONS` of the Job `hub-db-migrate` and of `hub`: `baseline` (one file, version 1000) or `chain` (the earlier migration chain, for a database that has not adopted the baseline yet). |
 | `hub.migrations.adoptChecksums` | `null` | Expected journal of the chain, one `<version> <sha384 hex>` line each. Set: the Job runs `hub migrate --adopt` (needs `source: baseline`), see `docs/migrations.md`. |
-| `hub.env` | `{}` | More hub env, for example `HUB_SEED_DIR`, `HUB_SEED_REQUIRED`, `HUB_DEFAULT_DOCS_REPO`. Not for secrets: a name with `SECRET`, `PASSWORD`, `TOKEN` or `PRIVATE_KEY` fails the render. |
+| `hub.seed.files` | `null` | Installation seeds, `{<path>: <content>}`; a path is a file name or one directory and a file name (`people.toml`, `links/0001.jsonl`), see `examples/seed`. Set: ConfigMap `hub-seed` mounted at `HUB_SEED_DIR` with `HUB_SEED_REQUIRED` true, and a changed seed rolls hub. |
+| `hub.env` | `{}` | More hub env, for example `HUB_DEFAULT_DOCS_REPO`; `HUB_SEED_DIR` and `HUB_SEED_REQUIRED` here only without `hub.seed.files`. Not for secrets: a name with `SECRET`, `PASSWORD`, `TOKEN` or `PRIVATE_KEY` fails the render. |
 | `web.env` | `{}` | More hub-web env, for example `HUB_LOCALE`, `PUBLIC_HUB_NAME`. Not for secrets, as `hub.env`. |
 
 The `hub.instance` block renders the same env into the Job `hub-db-migrate` and the Deployment `hub`.

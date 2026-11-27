@@ -1,0 +1,5 @@
+kind: ConfigMap
+x-helm-if: .Values.hub.seed.files
+# Fields the TypeScript AppHost cannot express: the data is a range over values hub.seed.files (_helpers.tpl,
+# hub.seed-data). hub mounts it at HUB_SEED_DIR (templates/hub/deployment.yaml) and reads it at start (src/seed.rs).
+data: '{{= include "hub.seed-data" . | nindent 2 }}'
