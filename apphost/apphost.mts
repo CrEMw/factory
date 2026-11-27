@@ -149,6 +149,13 @@ if (publish) {
         await m.withField('spec.target.creationPolicy', 'Owner');
       },
     });
+    // Installation seeds of hub (src/seed.rs) from values hub.seed.files: data, the condition and the volume in
+    // deploy/overlay (keys with dots, a range over the files). No files in values: no ConfigMap, hub reads no seed.
+    await resource.addManifest('v1', 'ConfigMap', 'hub-seed', {
+      configure: async (m) => {
+        await m.withLabel('app.kubernetes.io/component', 'hub');
+      },
+    });
     // Database roles hub and hub_web: each service has its own role with rights on its own schemas only
     // (services/hub/migrations/0021_db_roles.sql), the owner app stays the migration role. The password comes from a
     // secret store key per service (random_password, written by the platform Terraform); ESO builds a basic-auth secret

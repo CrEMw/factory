@@ -11,6 +11,9 @@ spec:
     rollingUpdate:
       maxUnavailable: 0
   template:
+    metadata:
+      # A changed seed rolls hub: it reads the seed directory at start only (src/seed.rs). No seed, no annotation.
+      annotations: '{{= include "hub.seed-annotations" . | nindent 8 }}'
     spec:
       nodeSelector: '{{=- toYaml .Values.nodeSelector | nindent 8 }}'
       # hub does not call the Kubernetes API and needs no ServiceAccount token.
@@ -36,6 +39,13 @@ spec:
                     - key: secret
                       path: hub-web
               - '{{=- with include "hub.caller-sources" . | trim }}{{ nindent 14 . }}{{ end }}'
+        - '{{=- if .Values.hub.seed.files }}'
+        # Installation seeds (ConfigMap hub-seed from values hub.seed.files).
+        - name: seed
+          configMap:
+            name: hub-seed
+            items: '{{= include "hub.seed-items" . | nindent 14 }}'
+        - '{{=- end }}'
       containers:
         # name is required: tools/chart.sh uses it to check that the patch lands on the same container.
         - name: hub
@@ -59,11 +69,22 @@ spec:
             # Install settings (services/hub/src/config.rs): required, no default; the same block in the Job
             # hub-db-migrate and in the Deployment hub. The account is written to public.instance once.
             - '{{=- include "hub.instance-env" . | nindent 12 }}'
+            - '{{=- if .Values.hub.seed.files }}'
+            - name: HUB_SEED_DIR
+              value: /var/run/hub-seed
+            - name: HUB_SEED_REQUIRED
+              value: "true"
+            - '{{=- end }}'
             - '{{=- with include "hub.extra-env" (dict "root" . "env" .Values.hub.env) }}{{ nindent 12 . }}{{ end }}'
           volumeMounts:
             - name: callers
               mountPath: /var/run/secrets/hub-callers
               readOnly: true
+            - '{{=- if .Values.hub.seed.files }}'
+            - name: seed
+              mountPath: /var/run/hub-seed
+              readOnly: true
+            - '{{=- end }}'
           # hub writes only to sockets: the image root is read-only.
           securityContext:
             allowPrivilegeEscalation: false

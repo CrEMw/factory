@@ -1,0 +1,14 @@
+{{- if .Values.hub.seed.files }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "hub-seed"
+  labels:
+    app.kubernetes.io/component: "hub"
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# Fields the TypeScript AppHost cannot express: the data is a range over values hub.seed.files (_helpers.tpl,
+# hub.seed-data). hub mounts it at HUB_SEED_DIR (templates/hub/deployment.yaml) and reads it at start (src/seed.rs).
+data: {{ include "hub.seed-data" . | nindent 2 }}
+{{- end }}

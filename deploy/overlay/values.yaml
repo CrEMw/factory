@@ -95,7 +95,12 @@ hub:
   migrations:
     source: baseline
     adoptChecksums: null
-  # More hub env, e.g. HUB_SEED_DIR, HUB_SEED_REQUIRED, HUB_DEFAULT_DOCS_REPO (services/hub/src/seed.rs, documents.rs).
+  # Installation seeds (services/hub/src/seed.rs, examples/seed): files: {<path>: <content>}, a path is a file name or
+  # one directory and a file name (people.toml, links/0001.jsonl). Set: ConfigMap hub-seed mounted at HUB_SEED_DIR,
+  # HUB_SEED_REQUIRED true, a changed seed rolls hub. null: no seed.
+  seed:
+    files: null
+  # More hub env, e.g. HUB_DEFAULT_DOCS_REPO (services/hub/src/documents.rs); HUB_SEED_* come from hub.seed.
   env: {}
 web:
   # More hub-web env; without HUB_LOCALE hub-web uses its default language.
