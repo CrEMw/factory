@@ -52,6 +52,9 @@ jobs:
           persist-credentials: false
           # The whole history: every commit of the pull request is published with it.
           fetch-depth: 0
+          # The head of the pull request, not the test merge GitHub makes (refs/pull/N/merge): that commit never enters
+          # the history (squash merge, author set by the merging admin), and its author is the account's address.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Install gitleaks (pinned, checksum verified)
         run: |
           mkdir -p "$RUNNER_TEMP/bin"
