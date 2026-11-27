@@ -1,0 +1,117 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+# Fields the TypeScript AppHost cannot express. tools/chart.sh merges this file into the generated template.
+metadata:
+  name: "hub-deployment"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+  annotations:
+    # hub rolls out after hub-web (wave 0). A new hub requires the caller secret; an old hub-web without the
+    # headers would get 401, while a new hub-web works with an old hub (extra headers do no harm).
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+        app.kubernetes.io/component: "hub"
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+    spec:
+      containers:
+        # name is required: tools/chart.sh uses it to check that the patch lands on the same container.
+        - image: "{{ .Values.parameters.hub.hub_image }}"
+          name: "hub"
+          # Aspire writes scheme: "http", but the API server accepts only HTTP and HTTPS (server-side dry-run).
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            httpGet:
+              scheme: "HTTP"
+              path: "/health"
+              port: 8000
+          envFrom:
+            - configMapRef:
+                name: "hub-config"
+          ports:
+            - name: "http"
+              protocol: "TCP"
+              containerPort: 8000
+          imagePullPolicy: "IfNotPresent"
+          env:
+            # Queries run as the role hub (ExternalSecret hub-db-hub). The password of the owner app (hub-db-app) is not
+            # here: the Job hub-db-migrate runs migrations, hub only verifies the migration log on start.
+            - name: HUBDB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: hub-db-hub
+                  key: uri
+            - name: HUB_CALLERS_DIR
+              value: /var/run/secrets/hub-callers
+            # No open mode in the cluster: hub does not start without caller secrets.
+            - name: HUB_CALLERS_REQUIRED
+              value: "true"
+            # Install settings (services/hub/src/config.rs): required, no default; the same block in the Job
+            # hub-db-migrate and in the Deployment hub. The account is written to public.instance once.
+{{- include "hub.instance-env" . | nindent 12 }}
+{{- with include "hub.extra-env" (dict "root" . "env" .Values.hub.env) }}{{ nindent 12 . }}{{ end }}
+          volumeMounts:
+            - name: callers
+              mountPath: /var/run/secrets/hub-callers
+              readOnly: true
+          # hub writes only to sockets: the image root is read-only.
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 200m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      # hub does not call the Kubernetes API and needs no ServiceAccount token.
+      automountServiceAccountToken: false
+      # uid and gid from services/Dockerfile (USER 65532:65532).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      # Caller secrets of hub (src/callers.rs): one file per caller, the file name is the caller name. Not optional:
+      # the pod does not start without a secret (and with HUB_CALLERS_REQUIRED and an empty directory hub would refuse).
+      # hub rereads the directory every 30 s, a key change in the secret store arrives through ESO without a restart.
+      # A new caller: one more secret source with path <name>.
+      volumes:
+        - name: callers
+          projected:
+            sources:
+              - secret:
+                  name: hub-caller-hub-web
+                  items:
+                    - key: secret
+                      path: hub-web
+{{- with include "hub.caller-sources" . | trim }}{{ nindent 14 . }}{{ end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+      app.kubernetes.io/component: "hub"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+  replicas: 1
+  revisionHistoryLimit: 3
+  # With replicas: 1 the generated maxUnavailable: 1 allows killing the only pod before the new one is ready.
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: "RollingUpdate"

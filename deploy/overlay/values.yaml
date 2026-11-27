@@ -1,0 +1,105 @@
+# Install values: neutral chart defaults, not tied to any particular install.
+# An install passes its own values file over these.
+# Empty and null: the variable is not rendered, and the service default applies.
+nameOverride: ""
+# Node of all pods and the database; empty: any node.
+nodeSelector: {}
+secrets:
+  store:
+    kind: SecretStore
+    name: hub-secrets
+  # Keys in the secret store. Changing a key: ESO loses the secret.
+  remoteKeys:
+    dbHub: hub-db-hub
+    dbHubWeb: hub-db-hub-web
+    backupStorageKey: hub-backup-storage-key
+    webAuthSecret: hub-web-auth-secret
+    accessTeamDomain: hub-web-access-team-domain
+    accessAud: hub-web-access-aud
+    cloudflaredToken: hub-cloudflared-token
+    # Path tokens of the agent mailbox (comma separated); null: no ExternalSecret, the mailbox answers 404.
+    mailboxPathToken: null
+    # Client secret of the OIDC entrance; null: no ExternalSecret, and the entrance needs no secret or is off. hub-web
+    # reads it as a file (AUTH_OIDC_CLIENT_SECRET_FILE) at start: a new value takes effect on the next restart.
+    oidcClientSecret: null
+    # One per hub caller: the file name in the volume callers. hub-web always, the others from hub.callers.
+    callers:
+      hub-web: hub-caller-hub-web
+db:
+  instances: 1
+  # class cannot change on a live Cluster.
+  storage:
+    size: 5Gi
+    class: standard
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  # COMMENT ON ROLE of the service roles hub and hub_web (CNPG managed roles); null: a neutral text.
+  roleComments:
+    hub: null
+    hubWeb: null
+backup:
+  # barman-cloud backups to Azure Blob: ObjectStore, ScheduledBackup and the WAL archiver only when enabled.
+  enabled: false
+  azure:
+    account: ""
+  # Byte for byte: a different path is a new archive for barman, and the WAL chain breaks.
+  destinationPath: ""
+  retention: 14d
+  schedule: "0 30 3 * * *"
+ingress:
+  tailscale:
+    enabled: false
+    className: tailscale
+    proxyGroup: ""
+    host: ""
+  cloudflared:
+    enabled: false
+    image: docker.io/cloudflare/cloudflared:2026.5.2@sha256:12ff5c6992a9863db4da270746af7c244bcaee49353039af8104268a18d6c4f0
+    tokenSecret: hub-cloudflared
+    protocol: http2
+# ORIGIN of hub-web: the Better Auth baseURL and the MCP resource address.
+origin: ""
+auth:
+  providers:
+    cloudflareAccess:
+      enabled: false
+    tailscale:
+      host: ""
+  extraOrigins: ""
+hub:
+  # Callers of hub besides hub-web, for example docs-<repo> (the document run of a repository, POST
+  # /api/documents/sync): one ExternalSecret hub-caller-<name> each (templates/hub/caller-extra.tpl) and one source of the
+  # volume callers, in this order. The secret store key of each is in secrets.remoteKeys.callers.<name>.
+  callers: []
+  # One env block for the Job hub-db-migrate and the Deployment hub (services/hub/src/config.rs).
+  instance:
+    # Required (required in the template): there is no made-up default.
+    account: null
+    timezone: null
+    mailboxPendingLimit: null
+    mailboxPendingTtl: null
+    documentRoots: []
+    # Words that introduce ticket links in documents (migration 0027), {describes: [...], closes: [...], and: [...]};
+    # null: the English default of hub (services/hub/src/config.rs).
+    documentLinkLabels: null
+  # Schema migrations (docs/migrations.md). source: baseline (one file, version 1000, what a new installation uses) or
+  # chain (the earlier migration chain, for a database that has not adopted the baseline yet). adoptChecksums: the
+  # expected journal of the chain, one "<version> <sha384 hex>" line each; when set, the Job hub-db-migrate runs
+  # `hub migrate --adopt` (needs source baseline), which records the baseline as applied on a chain database once its
+  # schema equals the baseline, and does nothing on a database that has it already.
+  migrations:
+    source: baseline
+    adoptChecksums: null
+  # More hub env, e.g. HUB_SEED_DIR, HUB_SEED_REQUIRED, HUB_DEFAULT_DOCS_REPO (services/hub/src/seed.rs, documents.rs).
+  env: {}
+web:
+  # More hub-web env; without HUB_LOCALE hub-web uses its default language.
+  env: {}
+otel:
+  # OTEL_EXPORTER_OTLP_ENDPOINT of hub and hub-web; empty: no telemetry is sent.
+  endpoint: ""

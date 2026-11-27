@@ -1,0 +1,5 @@
+kind: ConfigMap
+data:
+  ORIGIN: "{{ .Values.origin }}"
+  AUTH_TAILSCALE_HOSTS: "{{ .Values.auth.providers.tailscale.host }}"
+  AUTH_EXTRA_ORIGINS: "{{ .Values.auth.extraOrigins }}"

@@ -1,0 +1,15 @@
+# Components of the install: component nodes of the graph, a component_of edge to the project, in_component from
+# tickets with the tags. Fields: slug (key, ^[a-z0-9][a-z0-9-]{0,39}$), title, description, project, tags.
+
+[[component]]
+slug = "api"
+title = "API"
+description = "The service and its routes."
+project = "widgets"
+tags = ["api"]
+
+[[component]]
+slug = "web"
+title = "Web"
+project = "widgets"
+tags = ["web", "ui"]

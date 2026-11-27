@@ -1,0 +1,10 @@
+{
+  "name": "factory-tools",
+  "private": true,
+  "dependencies": {
+    "@microsoft/aspire-cli": "13.6.5"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.4"
+  }
+}

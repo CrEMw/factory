@@ -1,0 +1,37 @@
+# Smallest working install: one hub at https://hub.example.com, sign-in through an external OpenID Connect provider.
+#
+#   helm template factory deploy/chart -f examples/values/minimal.yaml
+#
+# Keys not set here keep the defaults of deploy/overlay/values.yaml. The cluster needs CloudNativePG and External
+# Secrets Operator; the SecretStore hub-secrets must hold the keys listed under secrets.remoteKeys there
+# (hub-db-hub, hub-db-hub-web, hub-web-auth-secret, hub-caller-hub-web) and, for this file,
+# hub-web-oidc-client-secret.
+#
+# This file exposes no entrance: route https://hub.example.com to the Service hub-web-service (port name http) with
+# your own Ingress or Gateway, or use cloudflare-access.yaml or tailscale.yaml instead.
+
+# Public address of hub-web (ORIGIN): the Better Auth base URL and the MCP resource address.
+origin: https://hub.example.com
+
+hub:
+  instance:
+    # Written to the database once; must match ^[a-z][a-z0-9-]{0,39}$.
+    account: acme
+    # An IANA time zone name.
+    timezone: UTC
+
+web:
+  env:
+    # OIDC entrance (hub-web/src/lib/server/identity/oidc.ts). Register the redirect address
+    # https://hub.example.com/api/auth/callback/oidc at the provider. Without issuer, client id and secret the
+    # entrance is off and nobody can sign in. The issuer must be an https URL.
+    AUTH_OIDC_ISSUER: https://login.example.com
+    AUTH_OIDC_CLIENT_ID: replace-me
+    # Name of the provider on the sign-in page; OIDC by default.
+    AUTH_OIDC_NAME: Example SSO
+
+secrets:
+  remoteKeys:
+    # Client secret of the OIDC entrance: the name of a key in the secret store, never the value. hub-web gets it as a
+    # file (AUTH_OIDC_CLIENT_SECRET_FILE). A secret-like name in web.env (SECRET, PASSWORD, TOKEN) fails the render.
+    oidcClientSecret: hub-web-oidc-client-secret

@@ -1,0 +1,10 @@
+# People of the install: person nodes of the graph, ticket assignees. Fields: handle (key, ^[a-z][a-z0-9-]{0,39}$),
+# name, email (optional), aliases, is_agent.
+
+[[person]]
+handle = "alice"
+name = "Alice"
+
+[[person]]
+handle = "bob"
+name = "Bob"

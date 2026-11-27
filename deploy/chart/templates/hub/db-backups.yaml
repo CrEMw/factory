@@ -1,0 +1,37 @@
+{{- if .Values.backup.enabled }}
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: "hub-db-backups"
+  annotations:
+    argocd.argoproj.io/sync-options: "Prune=false,Delete=false"
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+spec:
+  retentionPolicy: "{{ .Values.backup.retention }}"
+  configuration:
+    destinationPath: "{{ .Values.backup.destinationPath }}"
+    azureCredentials:
+      storageAccount:
+        name: "hub-db-backup-storage"
+        key: "AZURE_STORAGE_ACCOUNT"
+      storageKey:
+        name: "hub-db-backup-storage"
+        key: "AZURE_STORAGE_KEY"
+    wal:
+      compression: "gzip"
+    data:
+      compression: "gzip"
+  instanceSidecarConfiguration:
+    resources:
+      requests:
+        cpu: "20m"
+        memory: "64Mi"
+      limits:
+        cpu: "300m"
+        memory: "256Mi"
+{{- end }}

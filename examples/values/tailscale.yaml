@@ -1,0 +1,32 @@
+# Install inside a tailnet: the Tailscale Kubernetes operator exposes hub-web through an Ingress, and hub-web signs
+# in tailnet users by the Tailscale-User-* headers of the proxy. Tagged devices cannot sign in.
+#
+#   helm template factory deploy/chart -f examples/values/tailscale.yaml
+#
+# The cluster needs the Tailscale Kubernetes operator with the ingress class tailscale and a ProxyGroup of type
+# ingress. The other keys are those of minimal.yaml.
+#
+# hub.example.com below stands for the full MagicDNS name of the Ingress, in the form hub.<tailnet>.ts.net:
+# replace it in origin and auth.providers.tailscale.host.
+
+origin: https://hub.example.com
+
+hub:
+  instance:
+    account: acme
+    timezone: UTC
+
+ingress:
+  tailscale:
+    enabled: true
+    className: tailscale
+    # Name of the ProxyGroup (annotation tailscale.com/proxy-group).
+    proxyGroup: ingress
+    # Machine name of the Ingress (tls.hosts): the first label of the MagicDNS name.
+    host: hub
+
+auth:
+  providers:
+    tailscale:
+      # AUTH_TAILSCALE_HOSTS: the full host name on which the Tailscale headers are trusted.
+      host: hub.example.com

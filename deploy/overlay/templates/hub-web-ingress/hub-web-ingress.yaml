@@ -1,0 +1,12 @@
+kind: Ingress
+x-helm-if: .Values.ingress.tailscale.enabled
+# Tailscale takes the host name from tls.hosts; addIngress supports tls only with secretName and without hosts.
+# The same host is in values auth.providers.tailscale.host (AUTH_TAILSCALE_HOSTS): change them together.
+spec:
+  ingressClassName: "{{ .Values.ingress.tailscale.className }}"
+  tls:
+    - hosts:
+        - '{{= .Values.ingress.tailscale.host }}'
+metadata:
+  annotations:
+    tailscale.com/proxy-group: "{{ .Values.ingress.tailscale.proxyGroup }}"

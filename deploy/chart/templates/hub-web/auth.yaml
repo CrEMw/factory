@@ -1,0 +1,26 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-web-auth"
+  annotations:
+    argocd.argoproj.io/sync-options: "Prune=false,Delete=false"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub-web"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. The key password of the secret hub-web-auth
+# (BETTER_AUTH_SECRET of hub-web, deploy/overlay/templates/hub-web/deployment.yaml) from the secret store.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-web-auth"
+    creationPolicy: "Owner"
+    deletionPolicy: "Retain"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.webAuthSecret }}

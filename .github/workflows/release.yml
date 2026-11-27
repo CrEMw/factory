@@ -1,0 +1,143 @@
+# Release of a tag vX.Y.Z (docs/releasing.md): images hub, hub-web and tools for linux/amd64 and linux/arm64 in
+# ghcr.io/cremw/factory-hub, factory-hub-web and factory-tools, an SPDX SBOM and build provenance as attestations,
+# keyless cosign signatures, the chart in oci://ghcr.io/cremw/charts, and the digests in the GitHub Release. A tag
+# is created only with `gh release create`.
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  REGISTRY: ghcr.io/cremw
+  DAGGER_VERSION: 0.21.11
+  COSIGN_VERSION: 3.1.4
+  SYFT_VERSION: 1.57.0
+  HELM_VERSION: 4.3.0
+jobs:
+  images:
+    if: github.repository == 'CrEMw/factory'
+    strategy:
+      matrix:
+        include:
+          # Native runners: the tools image does not build under emulation (the Aspire server loses its parent).
+          - {runner: ubuntu-24.04, arch: amd64, dagger: a2d3ef96e7305abc18663a3606d9c1c592278ba3c8f48e01d6be14eef72276ef}
+          - {runner: ubuntu-24.04-arm, arch: arm64, dagger: 7a19fc16ce58d8aa80e273629a38a3cf3e49951df8928b38a908805c9a08cc50}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install dagger (pinned, checksum verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSLo "$RUNNER_TEMP/dagger.tar.gz" \
+            "https://github.com/dagger/dagger/releases/download/v${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_${{ matrix.arch }}.tar.gz"
+          echo "${{ matrix.dagger }}  $RUNNER_TEMP/dagger.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/dagger.tar.gz" -C "$RUNNER_TEMP/bin" dagger
+          echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"
+      - name: Build and push ${{ matrix.arch }}
+        env:
+          DAGGER_NO_NAG: "1"
+          GHCR_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          dagger call publish --source=. --registry="$REGISTRY" --tag="${TAG#v}-${{ matrix.arch }}" \
+            --username="$ACTOR" --password=env://GHCR_TOKEN --platform=linux/${{ matrix.arch }}
+
+  release:
+    needs: images
+    if: github.repository == 'CrEMw/factory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      packages: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install cosign, syft and helm (pinned, checksums verified)
+        run: |
+          b="$RUNNER_TEMP/bin"; mkdir -p "$b"; cd "$RUNNER_TEMP"
+          curl -fsSLo cosign "https://github.com/sigstore/cosign/releases/download/v${COSIGN_VERSION}/cosign-linux-amd64"
+          curl -fsSLo syft.tar.gz "https://github.com/anchore/syft/releases/download/v${SYFT_VERSION}/syft_${SYFT_VERSION}_linux_amd64.tar.gz"
+          curl -fsSLo helm.tar.gz "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz"
+          sha256sum -c - <<'SUMS'
+          424e2c97d0b45fd7a6b608a87f090f35633f4c23ece5f092d48bba11aaf4bbfa  cosign
+          9c077a7d43029b3b13e98a8db720661e700c4d58db6352153a06395ae4a2a704  syft.tar.gz
+          86584a54def73570558f66f5111cc53dfed56689637ae32c1201205d494f54fb  helm.tar.gz
+          SUMS
+          install -m 0755 cosign "$b/cosign"
+          tar -xzf syft.tar.gz -C "$b" syft
+          tar -xzf helm.tar.gz -C "$b" --strip-components=1 linux-amd64/helm
+          echo "$b" >>"$GITHUB_PATH"
+      - name: Log in to ghcr
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$ACTOR" --password-stdin
+          echo "$GHCR_TOKEN" | helm registry login ghcr.io -u "$ACTOR" --password-stdin
+      - name: Multi-arch index, SBOM and signatures
+        id: images
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          v="${TAG#v}"
+          : >"$RUNNER_TEMP/digests.txt"
+          for c in hub hub-web tools; do
+            img="$REGISTRY/factory-$c"
+            docker buildx imagetools create -t "$img:$v" "$img:$v-amd64" "$img:$v-arm64"
+            digest="$(docker buildx imagetools inspect "$img:$v" --format '{{json .Manifest}}' | jq -r .digest)"
+            syft "$img@$digest" -o spdx-json="$RUNNER_TEMP/sbom-$c.spdx.json"
+            cosign sign --yes "$img@$digest"
+            cosign attest --yes --type spdxjson --predicate "$RUNNER_TEMP/sbom-$c.spdx.json" "$img@$digest"
+            echo "$img@$digest" >>"$RUNNER_TEMP/digests.txt"
+            echo "$(echo "$c" | tr - _)=$digest" >>"$GITHUB_OUTPUT"
+          done
+      - name: Chart
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          v="${TAG#v}"
+          helm package deploy/chart --version "$v" --app-version "$v" -d "$RUNNER_TEMP"
+          out="$(helm push "$RUNNER_TEMP/factory-$v.tgz" "oci://$REGISTRY/charts" 2>&1)"; echo "$out"
+          digest="$(echo "$out" | awk '/^Digest:/ {print $2}')"
+          cosign sign --yes "$REGISTRY/charts/factory@$digest"
+          echo "$REGISTRY/charts/factory:$v@$digest" >>"$RUNNER_TEMP/digests.txt"
+      - name: Build provenance of factory-hub
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/factory-hub
+          subject-digest: ${{ steps.images.outputs.hub }}
+          push-to-registry: true
+      - name: Build provenance of factory-hub-web
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/factory-hub-web
+          subject-digest: ${{ steps.images.outputs.hub_web }}
+          push-to-registry: true
+      - name: Build provenance of factory-tools
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ env.REGISTRY }}/factory-tools
+          subject-digest: ${{ steps.images.outputs.tools }}
+          push-to-registry: true
+      - name: GitHub Release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          { echo "Images and chart, by digest:"; echo; echo '```'; cat "$RUNNER_TEMP/digests.txt"; echo '```'; } >"$RUNNER_TEMP/notes.md"
+          gh release edit "$TAG" -R "$GITHUB_REPOSITORY" --notes-file "$RUNNER_TEMP/notes.md"

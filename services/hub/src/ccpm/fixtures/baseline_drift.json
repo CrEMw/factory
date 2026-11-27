@@ -1,0 +1,172 @@
+{
+  "name": "baseline_drift",
+  "comment": "Baseline at today 0: chain A-B (alice), C (bob) feeds the finish, PB 2, FB 1. Now today 2: A is done, B doing with 1 remaining, C re-estimated to 6, a new N (scope_change). The fresh chain became C: chain_drift, members from the baseline [B]. Finish subnet C, N ends at 8, FB compressed to zero, plan shifted by 5 (late), B doing in place. PB: chain_complete = (2 + (2 - 1)) / 4 = 75%, consumed = (8 - 4) / 2 = 200%: red, penetration 200*100 - (10*100 + 60*75) = 14500. FB: (8 - 3) / 1 = 500%, red.",
+  "today": 2,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "done",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        },
+        "done_at": 2
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "doing",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2,
+          "remaining_hd": 1
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 6
+        }
+      },
+      {
+        "seq": 4,
+        "code": "N",
+        "status": "open",
+        "assignee": "carol",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 1
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      2
+    ],
+    "end": 10,
+    "late_by": 5,
+    "tasks": {
+      "1": null,
+      "2": [
+        2,
+        3
+      ],
+      "3": [
+        2,
+        8
+      ],
+      "4": [
+        6,
+        7
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 2,
+        "start": 8,
+        "end": 10,
+        "zone": "red",
+        "chain_complete_pct": 75,
+        "consumed_pct": 200,
+        "penetration": 14500
+      },
+      "fb:finish": {
+        "size": 1,
+        "start": 8,
+        "end": 8,
+        "compressed": true,
+        "zone": "red",
+        "chain_complete_pct": 0,
+        "consumed_pct": 500
+      }
+    },
+    "flags": {
+      "4": [
+        "scope_change"
+      ]
+    },
+    "plan_flags": [
+      "chain_drift",
+      "compressed",
+      "late"
+    ]
+  },
+  "baseline": {
+    "today": 0,
+    "input": {
+      "root": 100,
+      "tasks": [
+        {
+          "seq": 1,
+          "code": "A",
+          "status": "open",
+          "assignee": "alice",
+          "estimate": {
+            "effort_sp": 1,
+            "aggressive_hd": 2
+          }
+        },
+        {
+          "seq": 2,
+          "code": "B",
+          "status": "open",
+          "assignee": "alice",
+          "estimate": {
+            "effort_sp": 1,
+            "aggressive_hd": 2
+          }
+        },
+        {
+          "seq": 3,
+          "code": "C",
+          "status": "open",
+          "assignee": "bob",
+          "estimate": {
+            "effort_sp": 1,
+            "aggressive_hd": 2
+          }
+        }
+      ],
+      "blocks": [
+        {
+          "src": 1,
+          "dst": 2
+        }
+      ]
+    },
+    "expect": {
+      "chain": [
+        1,
+        2
+      ],
+      "chain_end": 4,
+      "pb_size": 2,
+      "feeding": [
+        {
+          "key": "fb:finish",
+          "tasks": [
+            3
+          ],
+          "size": 1,
+          "end": 3
+        }
+      ]
+    }
+  }
+}

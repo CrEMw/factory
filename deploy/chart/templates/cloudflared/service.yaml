@@ -1,0 +1,22 @@
+{{- if .Values.ingress.cloudflared.enabled }}
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "cloudflared-service"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "cloudflared"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+spec:
+  type: "ClusterIP"
+  selector:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "cloudflared"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+  ports:
+    - name: "metrics"
+      protocol: "TCP"
+      port: 2000
+      targetPort: 2000
+{{- end }}

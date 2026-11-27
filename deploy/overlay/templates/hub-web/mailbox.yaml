@@ -1,0 +1,9 @@
+kind: ExternalSecret
+x-helm-if: .Values.secrets.remoteKeys.mailboxPathToken
+# The data array: withField in the AppHost cannot express it. The platform Terraform writes the secret store key; its
+# value is the comma separated token list (one token, two during a rotation).
+spec:
+  data:
+    - secretKey: tokens
+      remoteRef:
+        key: '{{= .Values.secrets.remoteKeys.mailboxPathToken }}'

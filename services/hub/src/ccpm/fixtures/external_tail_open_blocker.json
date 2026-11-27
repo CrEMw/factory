@@ -1,0 +1,175 @@
+{
+  "name": "external_tail_open_blocker",
+  "comment": "A scope where every task has no assignee and no estimate (3 points = 3 half-days, s = 6); a, b, d, e are done; c is doing with no remainder; chain f -> g -> h -> i, and i has an open external blocker x without a projection. The milestone x sits at today 10, so i stays the last critical chain link instead of being placed after PB: f [10,13), g [13,16), h [16,19), i [19,22). PB = ceil(4·3/2) = 6 [22,28), plan end 28 is no earlier than the end of any task. c is a sink outside the critical chain: fb:finish ceil(3/2) = 2 [20,22), doing in place [10,13). Umbrella r [10,22).",
+  "today": 10,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 11,
+        "code": "a",
+        "status": "done",
+        "part_of": 100
+      },
+      {
+        "seq": 12,
+        "code": "b",
+        "status": "done",
+        "part_of": 100
+      },
+      {
+        "seq": 13,
+        "code": "c",
+        "status": "doing",
+        "part_of": 100
+      },
+      {
+        "seq": 14,
+        "code": "d",
+        "status": "done",
+        "part_of": 100
+      },
+      {
+        "seq": 15,
+        "code": "e",
+        "status": "done",
+        "part_of": 100
+      },
+      {
+        "seq": 16,
+        "code": "f",
+        "status": "open",
+        "part_of": 100
+      },
+      {
+        "seq": 17,
+        "code": "g",
+        "status": "open",
+        "part_of": 100
+      },
+      {
+        "seq": 18,
+        "code": "h",
+        "status": "open",
+        "part_of": 100
+      },
+      {
+        "seq": 19,
+        "code": "i",
+        "status": "open",
+        "part_of": 100
+      },
+      {
+        "seq": 100,
+        "code": "r",
+        "status": "open"
+      }
+    ],
+    "blocks": [
+      {
+        "src": 15,
+        "dst": 16
+      },
+      {
+        "src": 16,
+        "dst": 17
+      },
+      {
+        "src": 17,
+        "dst": 18
+      },
+      {
+        "src": 18,
+        "dst": 19
+      },
+      {
+        "src": 5,
+        "dst": 19
+      }
+    ],
+    "external": [
+      {
+        "seq": 5,
+        "code": "x",
+        "status": "open"
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      16,
+      17,
+      18,
+      19
+    ],
+    "resource_links": [],
+    "end": 28,
+    "late_by": 0,
+    "defaulted_pct": 100,
+    "approvable": false,
+    "tasks": {
+      "13": [
+        10,
+        13
+      ],
+      "16": [
+        10,
+        13
+      ],
+      "17": [
+        13,
+        16
+      ],
+      "18": [
+        16,
+        19
+      ],
+      "19": [
+        19,
+        22
+      ],
+      "100": [
+        10,
+        22
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 6,
+        "start": 22,
+        "end": 28,
+        "tasks": [
+          16,
+          17,
+          18,
+          19
+        ]
+      },
+      "fb:finish": {
+        "size": 2,
+        "start": 20,
+        "end": 22,
+        "tasks": [
+          13
+        ]
+      }
+    },
+    "flags": {
+      "19": [
+        "external_blocker",
+        "estimate_defaulted",
+        "unassigned"
+      ],
+      "13": [
+        "remaining_unknown"
+      ],
+      "100": [
+        "umbrella"
+      ]
+    },
+    "plan_flags": [],
+    "ready": [
+      16
+    ]
+  }
+}

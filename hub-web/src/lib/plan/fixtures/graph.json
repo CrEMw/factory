@@ -1,0 +1,22 @@
+{
+  "root": "tr00",
+  "layers": 4,
+  "truncated": false,
+  "nodes": [
+    { "code": "tx09", "project": "acme", "summary": "External blocker from another scope", "status": "open", "priority": null, "layer": 0, "order": 0 },
+    { "code": "ta02", "project": "demo", "summary": "Plan schema", "status": "doing", "priority": "p1", "layer": 0, "order": 1 },
+    { "code": "ta03", "project": "demo", "summary": "Chain computation", "status": "open", "priority": "p1", "layer": 1, "order": 0 },
+    { "code": "ta04", "project": "demo", "summary": "Feeding branch", "status": "open", "priority": null, "layer": 0, "order": 2 },
+    { "code": "ta05", "project": "demo", "summary": "Pages", "status": "open", "priority": null, "layer": 2, "order": 0 },
+    { "code": "ta06", "project": "demo", "summary": "Waits for an external blocker", "status": "open", "priority": null, "layer": 1, "order": 1 },
+    { "code": "tr00", "project": "demo", "summary": "Test scope", "status": "open", "priority": null, "layer": 3, "order": 0 }
+  ],
+  "edges": [
+    { "id": 1, "src": "ta02", "dst": "ta03", "rel": "blocks", "state": "confirmed" },
+    { "id": 2, "src": "ta04", "dst": "ta05", "rel": "blocks", "state": "confirmed" },
+    { "id": 3, "src": "tx09", "dst": "ta06", "rel": "blocks", "state": "confirmed" },
+    { "id": 4, "src": "ta03", "dst": "ta06", "rel": "blocks", "state": "proposed" },
+    { "id": 5, "src": "ta02", "dst": "tr00", "rel": "part_of", "state": "confirmed" },
+    { "id": 6, "src": "ta05", "dst": "tr00", "rel": "part_of", "state": "confirmed" }
+  ]
+}

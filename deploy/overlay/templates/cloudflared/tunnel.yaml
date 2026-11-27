@@ -1,0 +1,12 @@
+kind: ExternalSecret
+x-helm-if: .Values.ingress.cloudflared.enabled
+# The data array: withField in the AppHost cannot express it. The platform Terraform writes the secret store key.
+spec:
+  target:
+    name: "{{ .Values.ingress.cloudflared.tokenSecret }}"
+  data:
+    - secretKey: token
+      remoteRef:
+        key: '{{= .Values.secrets.remoteKeys.cloudflaredToken }}'
+metadata:
+  name: "{{ .Values.ingress.cloudflared.tokenSecret }}"

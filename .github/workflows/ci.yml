@@ -1,0 +1,84 @@
+# Checks of every pull request and of main. The ruleset of main requires both jobs by name: `dagger` and `leak`.
+# Jobs run only in CrEMw/factory: a fork or a mirror of the tree runs nothing.
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  # The same version as the module engine (dagger.json); the sum is of dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz
+  # from the release checksums.
+  DAGGER_VERSION: 0.21.11
+  DAGGER_SHA256: a2d3ef96e7305abc18663a3606d9c1c592278ba3c8f48e01d6be14eef72276ef
+  # The same version as the tools image (tools/Dockerfile); the sum is of gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz.
+  GITLEAKS_VERSION: 8.30.1
+  GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+jobs:
+  dagger:
+    if: github.repository == 'CrEMw/factory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # factory-tree compares git archive HEAD with tools/factory-tree.txt: one commit is enough.
+          fetch-depth: 1
+      - name: Install dagger (pinned, checksum verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSLo "$RUNNER_TEMP/dagger.tar.gz" \
+            "https://github.com/dagger/dagger/releases/download/v${DAGGER_VERSION}/dagger_v${DAGGER_VERSION}_linux_amd64.tar.gz"
+          echo "$DAGGER_SHA256  $RUNNER_TEMP/dagger.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/dagger.tar.gz" -C "$RUNNER_TEMP/bin" dagger
+          echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"
+      - name: Check
+        env:
+          DAGGER_NO_NAG: "1"
+        run: dagger call check --source=.
+
+  leak:
+    if: github.repository == 'CrEMw/factory'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The whole history: every commit of the pull request is published with it.
+          fetch-depth: 0
+      - name: Install gitleaks (pinned, checksum verified)
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSLo "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/bin" gitleaks
+          echo "$RUNNER_TEMP/bin" >>"$GITHUB_PATH"
+      - name: Secrets in the history
+        run: gitleaks git --no-banner --redact=100 --config .gitleaks.toml --log-opts=--all .
+      - name: Author and committer addresses
+        # Only GitHub noreply addresses and bots: a personal address in a public history cannot be taken back.
+        run: |
+          bad="$(git log --all --format='%ae%n%ce' | sort -u \
+            | grep -Ev '^(noreply@github\.com|[0-9]+\+[A-Za-z0-9-]+@users\.noreply\.github\.com|[A-Za-z0-9-]+\[bot\]@users\.noreply\.github\.com)$' || true)"
+          [ -z "$bad" ] || { echo "::error::commits with an address that is not a GitHub noreply address"; exit 1; }
+      - name: Cyrillic in the tree
+        run: sh tools/no-cyrillic.sh .
+      - name: Pull request title and branch
+        if: github.event_name == 'pull_request'
+        # Through env, never inlined into the script: a title is untrusted text. The squash commit takes the title, so
+        # it is held to the tree's rules: printable ASCII only.
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          for v in "$TITLE" "$BRANCH"; do
+            printf '%s' "$v" | LC_ALL=C grep -q '[^ -~]' && { echo "::error::pull request title or branch has non-ASCII characters"; exit 1; }
+          done
+          exit 0

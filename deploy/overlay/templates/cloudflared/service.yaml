@@ -1,0 +1,2 @@
+kind: Service
+x-helm-if: .Values.ingress.cloudflared.enabled

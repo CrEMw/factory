@@ -1,0 +1,10 @@
+# Plan scopes: the root (code of the umbrella ticket) and the children (part_of edges). Without the root ticket the
+# import creates it from project, summary, body, priority, tags. A person approves the plan baseline.
+
+[[scope]]
+root = "w1"
+project = "widgets"
+summary = "First widgets release (plan scope)"
+priority = "p2"
+tags = ["scope"]
+children = ["w2", "w3"]

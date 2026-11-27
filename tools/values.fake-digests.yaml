@@ -1,0 +1,6 @@
+# For checking the chart in a probe only: the digests are made up. The pipeline writes the real deploy/values.images.yaml.
+parameters:
+  hub:
+    hub_image: "example.invalid/factory/hub@sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  hub_web:
+    hub_web_image: "example.invalid/factory/hub-web@sha256:2222222222222222222222222222222222222222222222222222222222222222"

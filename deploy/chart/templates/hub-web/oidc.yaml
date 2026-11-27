@@ -1,0 +1,25 @@
+{{- if .Values.secrets.remoteKeys.oidcClientSecret }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-web-oidc"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub-web"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. Client secret of the OIDC entrance from the secret store;
+# hub-web reads it as the file AUTH_OIDC_CLIENT_SECRET_FILE (volume oidc-client-secret,
+# deploy/overlay/templates/hub-web/deployment.yaml), never as an env value.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-web-oidc"
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.oidcClientSecret }}
+{{- end }}

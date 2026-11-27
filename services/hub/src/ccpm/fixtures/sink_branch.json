@@ -1,0 +1,112 @@
+{
+  "name": "sink_branch",
+  "comment": "Chain A-B (alice). C after A ends in a sink outside the critical chain and feeds the finish: FB before PB [7,8), C [5,7). D feeds B: FB [3,4), D [2,3).",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 4
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 4
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 4,
+        "code": "D",
+        "status": "open",
+        "assignee": "carol",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 1
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      },
+      {
+        "src": 1,
+        "dst": 3
+      },
+      {
+        "src": 4,
+        "dst": 2
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2
+    ],
+    "end": 12,
+    "tasks": {
+      "1": [
+        0,
+        4
+      ],
+      "2": [
+        4,
+        8
+      ],
+      "3": [
+        5,
+        7
+      ],
+      "4": [
+        2,
+        3
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 4,
+        "start": 8,
+        "end": 12
+      },
+      "fb:finish": {
+        "size": 1,
+        "start": 7,
+        "end": 8,
+        "tasks": [
+          3
+        ]
+      },
+      "fb:2": {
+        "size": 1,
+        "start": 3,
+        "end": 4,
+        "tasks": [
+          4
+        ]
+      }
+    }
+  }
+}

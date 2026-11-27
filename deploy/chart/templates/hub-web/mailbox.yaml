@@ -1,0 +1,24 @@
+{{- if .Values.secrets.remoteKeys.mailboxPathToken }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-web-mailbox"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub-web"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. The platform Terraform writes the secret store key; its
+# value is the comma separated token list (one token, two during a rotation).
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-web-mailbox"
+  data:
+    - secretKey: tokens
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.mailboxPathToken }}
+{{- end }}

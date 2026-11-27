@@ -1,0 +1,249 @@
+/* Colors as one set of variables: light theme, and dark by the system setting. */
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --card: #ffffff;
+  --text: #16181d;
+  --muted: #667085;
+  --line: #e4e7ec;
+  --accent: #3b5bdb;
+  --accent-text: #ffffff;
+  --danger: #c92a2a;
+  --p0: #c92a2a;
+  --p1: #e8590c;
+  --p2: #3b5bdb;
+  --p3: #667085;
+  --doing: #e8590c;
+  --done: #2b8a3e;
+  /* Buffer zones (scope plan). */
+  --zone-green: #2f9e44;
+  --zone-yellow: #f08c00;
+  --zone-red: #e03131;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --card: #171a21;
+    --text: #e6e8ec;
+    --muted: #98a2b3;
+    --line: #262b36;
+    --accent: #748ffc;
+    --accent-text: #0f1115;
+    --danger: #ff8787;
+    --p0: #ff8787;
+    --p1: #ffa94d;
+    --p2: #748ffc;
+    --p3: #98a2b3;
+    --doing: #ffa94d;
+    --done: #69db7c;
+    --zone-green: #51cf66;
+    --zone-yellow: #fcc419;
+    --zone-red: #ff6b6b;
+  }
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+a {
+  color: var(--accent);
+}
+code {
+  font: 13px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.muted {
+  color: var(--muted);
+}
+.nowrap {
+  white-space: nowrap;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chips a {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+}
+.chips a span {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.chips a.active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+.chips a.active span {
+  color: inherit;
+}
+.pill {
+  display: inline-block;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.pill.doing {
+  border-color: var(--doing);
+  color: var(--doing);
+}
+.pill.done {
+  border-color: var(--done);
+  color: var(--done);
+}
+.pill.cancelled {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.prio {
+  font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.prio.p0 {
+  color: var(--p0);
+}
+.prio.p1 {
+  color: var(--p1);
+}
+.prio.p2 {
+  color: var(--p2);
+}
+.prio.p3 {
+  color: var(--p3);
+}
+.tag {
+  color: var(--muted);
+  font-size: 12px;
+}
+input,
+textarea,
+select {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+button {
+  padding: 9px 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover {
+  filter: brightness(1.08);
+}
+label {
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 13px;
+}
+[role='alert'] {
+  margin: 0;
+  color: var(--danger);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th,
+td {
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+/* Ticket and document text from Markdown. */
+.prose {
+  overflow-wrap: anywhere;
+}
+.prose :is(h1, h2, h3, h4) {
+  margin: 1.4em 0 0.5em;
+  line-height: 1.25;
+}
+.prose h1 {
+  font-size: 22px;
+}
+.prose h2 {
+  font-size: 19px;
+}
+.prose h3 {
+  font-size: 16px;
+}
+.prose pre {
+  overflow-x: auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--bg);
+}
+.prose :not(pre) > code {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--bg);
+}
+.prose table {
+  display: block;
+  overflow-x: auto;
+}
+.prose blockquote {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--line);
+  color: var(--muted);
+}
+.prose > :first-child {
+  margin-top: 0;
+}

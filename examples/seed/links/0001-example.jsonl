@@ -1,0 +1,2 @@
+# Ticket links: {"src": code, "rel": "blocks" | "part_of", "dst": code, "source": "<code>:body" | "<code>:summary"}.
+{"src": "w2", "rel": "blocks", "dst": "w3", "source": "w3:body"}

@@ -1,0 +1,91 @@
+{
+  "name": "resource_conflict",
+  "comment": "A and B belong to alice, C to bob after A. Without resources the chain is A-C; the resource conflict puts B after A, chain A-B with a resource link. PB = ceil((4+3)/2) = 4. C feeds the finish: FB = ceil(2/2) = 1, C as late as possible [4,6) (not earlier: after A).",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 4
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 3
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 3
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2
+    ],
+    "resource_links": [
+      2
+    ],
+    "end": 11,
+    "late_by": 0,
+    "tasks": {
+      "1": [
+        0,
+        4
+      ],
+      "2": [
+        4,
+        7
+      ],
+      "3": [
+        4,
+        6
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 4,
+        "start": 7,
+        "end": 11,
+        "tasks": [
+          1,
+          2
+        ]
+      },
+      "fb:finish": {
+        "size": 1,
+        "start": 6,
+        "end": 7,
+        "tasks": [
+          3
+        ]
+      }
+    },
+    "plan_flags": []
+  }
+}

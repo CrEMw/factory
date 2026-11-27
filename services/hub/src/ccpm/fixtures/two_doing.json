@@ -1,0 +1,110 @@
+{
+  "name": "two_doing",
+  "comment": "alice has two doing: A (2 of 4 remaining) and B (no remainder, full estimate 2) back to back by seq with the multitasking flag. C blocks B: the edge is excluded (started_while_blocked). C after A waits for alice until 14. Chain A-B-C with resource links. s: A = 8 - 4 + 2 = 6, B = 4, C = 4; PB = ceil((4+2+2)/2) = 4.",
+  "today": 10,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "doing",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 4,
+          "remaining_hd": 2
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "doing",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 3,
+        "dst": 2
+      },
+      {
+        "src": 1,
+        "dst": 3
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2,
+      3
+    ],
+    "resource_links": [
+      2,
+      3
+    ],
+    "end": 20,
+    "tasks": {
+      "1": [
+        10,
+        12
+      ],
+      "2": [
+        12,
+        14
+      ],
+      "3": [
+        14,
+        16
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 4,
+        "start": 16,
+        "end": 20
+      }
+    },
+    "flags": {
+      "1": [
+        "multitasking"
+      ],
+      "2": [
+        "multitasking",
+        "started_while_blocked",
+        "remaining_unknown"
+      ]
+    },
+    "ignored": [
+      [
+        3,
+        2
+      ]
+    ],
+    "ready": []
+  },
+  "next": [
+    {
+      "assignee": "alice",
+      "seq": 1,
+      "flags": [
+        "multitasking"
+      ]
+    }
+  ]
+}

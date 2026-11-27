@@ -1,0 +1,33 @@
+{{- if .Values.backup.enabled }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-db-backup-storage"
+  annotations:
+    argocd.argoproj.io/sync-options: "Prune=false,Delete=false"
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. Storage account key from the secret store
+# (written by the platform Terraform); the account name comes from values backup.azure.account.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-db-backup-storage"
+    creationPolicy: "Owner"
+    deletionPolicy: "Retain"
+    template:
+      mergePolicy: "Merge"
+      data:
+        AZURE_STORAGE_ACCOUNT: "{{ .Values.backup.azure.account }}"
+  data:
+    - secretKey: AZURE_STORAGE_KEY
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.backupStorageKey }}
+{{- end }}

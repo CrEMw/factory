@@ -1,0 +1,18 @@
+# gitleaks configuration of the factory repo: the default rules, and an allowlist for nothing but the
+# checksums of the lock files. The same file is the root .gitleaks.toml of the factory tree and the config of
+# the history guard that watches the published repo, so both report the same findings.
+title = "factory"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Checksums in lock files"
+condition = "AND"
+paths = ['''(^|/)(Cargo\.lock|pnpm-lock\.yaml|package-lock\.json)$''']
+regexTarget = "line"
+regexes = [
+  '''^checksum = "[0-9a-f]{64}"$''',
+  '''^\s*"integrity": "sha(1|256|384|512)-[A-Za-z0-9+/]+={0,2}",?$''',
+  '''^\s*resolution: \{integrity: sha(1|256|384|512)-[A-Za-z0-9+/]+={0,2}(, tarball: [^}]+)?\}$''',
+]

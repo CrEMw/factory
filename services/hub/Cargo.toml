@@ -1,0 +1,33 @@
+[package]
+name = "hub"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+repository = "https://github.com/CrEMw/factory"
+publish = false
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+chrono = { version = "0.4", default-features = false, features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres", "macros", "migrate", "chrono"] }
+# People and component seeds (seed/*.toml).
+toml = { version = "1.2.1", default-features = false, features = ["parse", "serde"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json"] }
+
+# OpenTelemetry: exact versions, the 0.33 family is upgraded only as a whole.
+opentelemetry = { version = "=0.33.1", default-features = false, features = ["trace", "metrics", "logs", "internal-logs"] }
+opentelemetry_sdk = { version = "=0.33.1", default-features = false, features = ["trace", "metrics", "logs", "internal-logs"] }
+opentelemetry-otlp = { version = "=0.33.1", default-features = false, features = ["http-proto", "reqwest-blocking-client", "reqwest-rustls", "trace", "metrics", "logs", "internal-logs"] }
+opentelemetry-http = { version = "=0.33.1", default-features = false }
+opentelemetry-appender-tracing = "=0.33.1"
+tracing-opentelemetry = { version = "=0.34.0", default-features = false }
+
+[dev-dependencies]
+proptest = "1.12.0"
+tower = { version = "0.5", features = ["util"] }

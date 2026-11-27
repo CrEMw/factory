@@ -1,0 +1,34 @@
+kind: Cluster
+# addManifest splits the path on dots, so the AppHost cannot express some fields (arrays, keys with dots).
+spec:
+  affinity:
+    nodeSelector: '{{=- toYaml .Values.nodeSelector | nindent 6 }}'
+  # plugin-barman-cloud writes backups and WAL to the ObjectStore hub-db-backups (AppHost); the AppHost cannot express the array.
+  plugins:
+    - '{{=- if .Values.backup.enabled }}'
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: hub-db-backups
+    - '{{=- end }}'
+  # Service roles: migration 0021_db_roles.sql grants the rights, the passwords come from the ExternalSecret secrets
+  # hub-db-hub and hub-db-hub-web (wave -3). The owner app and its secret hub-db-app stay for migrations.
+  # CRD defaults (ensure, inherit, connectionLimit) are written out so that Argo sees no drift.
+  managed:
+    roles:
+      - name: hub
+        comment: '{{= .Values.db.roleComments.hub | default "hub service (public, graph, plan, mailbox)" | quote }}'
+        ensure: present
+        login: true
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: hub-db-hub
+      - name: hub_web
+        comment: '{{= .Values.db.roleComments.hubWeb | default "hub-web service (auth)" | quote }}'
+        ensure: present
+        login: true
+        inherit: true
+        connectionLimit: -1
+        passwordSecret:
+          name: hub-db-hub-web

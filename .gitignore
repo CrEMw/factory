@@ -1,0 +1,4 @@
+# Aspire CLI, its bundle and package cache: installed by the commands in README.md
+.tools/node_modules/
+.tools/home/
+.aspire/

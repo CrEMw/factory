@@ -1,0 +1,26 @@
+{{- if .Values.auth.providers.cloudflareAccess.enabled }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-web-access"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub-web"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. The platform Terraform writes the secret store keys.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-web-access"
+  data:
+    - secretKey: team_domain
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.accessTeamDomain }}
+    - secretKey: aud
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.accessAud }}
+{{- end }}

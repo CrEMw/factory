@@ -1,0 +1,7 @@
+# Registry of document repositories: the repository, its project and the hub caller (secret docs-<name>) the
+# document run of the repository uses to send its snapshot to POST /api/documents/sync.
+
+[[repository]]
+repo = "acme/widgets"
+project = "widgets"
+caller = "docs-widgets"

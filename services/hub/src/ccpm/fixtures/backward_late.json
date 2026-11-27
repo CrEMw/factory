@@ -1,0 +1,61 @@
+{
+  "name": "backward_late",
+  "comment": "Backward mode, due 3 is earlier than possible: the chain starts no earlier than today, the plan is late by 3.",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2
+    ],
+    "end": 6,
+    "late_by": 3,
+    "tasks": {
+      "1": [
+        0,
+        2
+      ],
+      "2": [
+        2,
+        4
+      ]
+    },
+    "plan_flags": [
+      "late"
+    ]
+  },
+  "cfg": {
+    "mode": "backward",
+    "due": 3
+  }
+}

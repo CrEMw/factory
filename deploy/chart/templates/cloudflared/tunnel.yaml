@@ -1,0 +1,23 @@
+{{- if .Values.ingress.cloudflared.enabled }}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "{{ .Values.ingress.cloudflared.tokenSecret }}"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "cloudflared"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# The data array: withField in the AppHost cannot express it. The platform Terraform writes the secret store key.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "{{ .Values.ingress.cloudflared.tokenSecret }}"
+  data:
+    - secretKey: token
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.cloudflaredToken }}
+{{- end }}

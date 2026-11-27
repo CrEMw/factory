@@ -1,0 +1,19 @@
+{
+  "root": "tr00",
+  "baseline": {
+    "id": 3,
+    "approved_at": "2030-01-11T10:00:00Z",
+    "approved_by": "user:alice",
+    "approved_kind": "human",
+    "accepted_defaults": false,
+    "defaulted_pct": 15,
+    "max_defaulted_pct": 20
+  },
+  "points": [
+    { "day": "2030-01-11", "buffer_key": "fb:105", "kind": "feeding", "baseline_id": 3, "chain_complete_pct": 0, "consumed_pct": 0, "zone": "green", "flags": [] },
+    { "day": "2030-01-11", "buffer_key": "pb", "kind": "project", "baseline_id": 3, "chain_complete_pct": 0, "consumed_pct": 0, "zone": "green", "flags": [] },
+    { "day": "2030-01-12", "buffer_key": "pb", "kind": "project", "baseline_id": 3, "chain_complete_pct": 10, "consumed_pct": -16, "zone": "green", "flags": [] },
+    { "day": "2030-01-14", "buffer_key": "fb:105", "kind": "feeding", "baseline_id": 3, "chain_complete_pct": 0, "consumed_pct": 0, "zone": "green", "flags": [] },
+    { "day": "2030-01-14", "buffer_key": "pb", "kind": "project", "baseline_id": 3, "chain_complete_pct": 20, "consumed_pct": 33, "zone": "yellow", "flags": ["chain_drift"] }
+  ]
+}

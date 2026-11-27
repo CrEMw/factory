@@ -1,0 +1,32 @@
+# Install behind Cloudflare Access: a cloudflared connector in the cluster runs a remotely managed tunnel, and
+# hub-web checks the Access JWT of every sign-in.
+#
+#   helm template factory deploy/chart -f examples/values/cloudflare-access.yaml
+#
+# Before installing:
+# - create the tunnel in Cloudflare with a public hostname hub.example.com pointing at
+#   http://hub-web-service.<namespace>.svc.cluster.local:8001, and put its run token into the secret store under
+#   the key secrets.remoteKeys.cloudflaredToken (hub-cloudflared-token by default);
+# - create an Access application for hub.example.com and put its team domain and audience tag into the secret store
+#   under secrets.remoteKeys.accessTeamDomain and secrets.remoteKeys.accessAud
+#   (hub-web-access-team-domain and hub-web-access-aud by default).
+# The other keys are those of minimal.yaml.
+
+# The JWT is accepted only on the ORIGIN host (the tunnel brings requests with that Host).
+origin: https://hub.example.com
+
+hub:
+  instance:
+    account: acme
+    timezone: UTC
+
+ingress:
+  cloudflared:
+    # Deployment cloudflared-deployment and ExternalSecret hub-cloudflared (the run token).
+    enabled: true
+
+auth:
+  providers:
+    cloudflareAccess:
+      # ExternalSecret hub-web-access and AUTH_CF_ACCESS_TEAM_DOMAIN, AUTH_CF_ACCESS_AUD in hub-web.
+      enabled: true

@@ -1,0 +1,149 @@
+{
+  "name": "umbrella",
+  "comment": "Root R: children U (an umbrella of U1 -> U2), P and W; D, a duplicate of P, is excluded. P blocks U = P -> U1 (entry), U blocks W = U2 (exit) -> W. Chain P-U1-U2-W, PB = ceil((4+2+2+1)/2) = 5. Summary bars U [4,8), R [0,9).",
+  "today": 0,
+  "input": {
+    "root": 1,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "R",
+        "status": "open"
+      },
+      {
+        "seq": 2,
+        "code": "U",
+        "status": "open",
+        "part_of": 1
+      },
+      {
+        "seq": 3,
+        "code": "U1",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        },
+        "part_of": 2
+      },
+      {
+        "seq": 4,
+        "code": "U2",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        },
+        "part_of": 2
+      },
+      {
+        "seq": 5,
+        "code": "P",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 4
+        },
+        "part_of": 1
+      },
+      {
+        "seq": 6,
+        "code": "W",
+        "status": "open",
+        "assignee": "carol",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 1
+        },
+        "part_of": 1
+      },
+      {
+        "seq": 7,
+        "code": "D",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 3
+        },
+        "part_of": 1,
+        "duplicates": 5
+      }
+    ],
+    "blocks": [
+      {
+        "src": 3,
+        "dst": 4
+      },
+      {
+        "src": 5,
+        "dst": 2
+      },
+      {
+        "src": 2,
+        "dst": 6
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      5,
+      3,
+      4,
+      6
+    ],
+    "resource_links": [],
+    "end": 14,
+    "tasks": {
+      "1": [
+        0,
+        9
+      ],
+      "2": [
+        4,
+        8
+      ],
+      "3": [
+        4,
+        6
+      ],
+      "4": [
+        6,
+        8
+      ],
+      "5": [
+        0,
+        4
+      ],
+      "6": [
+        8,
+        9
+      ],
+      "7": null
+    },
+    "buffers": {
+      "pb": {
+        "size": 5,
+        "start": 9,
+        "end": 14
+      }
+    },
+    "flags": {
+      "1": [
+        "umbrella"
+      ],
+      "2": [
+        "umbrella"
+      ],
+      "7": [
+        "duplicate"
+      ]
+    },
+    "ready": [
+      5
+    ]
+  }
+}

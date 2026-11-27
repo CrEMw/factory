@@ -1,0 +1,25 @@
+#!/bin/sh
+# Runs the pinned Aspire CLI as if there were no .NET on the machine and keeps it from writing into the real home:
+# HOME is replaced with .tools/home or with the directory from ASPIRE_HOME_DIR (.aspire, .nuget, .dotnet, .dcp,
+# .aspnet, .local/share/NuGet, .cache/dotnet_bundle_extract, .cache/dcp and whatever Aspire comes up with later go there),
+# /usr/share/dotnet is hidden behind an empty tmpfs.
+# Nothing is created in the real home. cargo, rustup, mise and docker keep looking at the real home.
+# bwrap is needed only if the machine has a system dotnet-runtime: without /usr/share/dotnet replacing HOME is enough.
+# The tools image (tools/Dockerfile) has no system dotnet, and the Aspire home is already filled and set by
+# the ASPIRE_HOME_DIR variable: the gate does not download the bundle and the NuGet packages on every run.
+here="$(cd "$(dirname "$0")" && pwd)"
+real="$HOME"
+home="${ASPIRE_HOME_DIR:-$here/home}"
+mkdir -p "$home"
+export CARGO_HOME="${CARGO_HOME:-$real/.cargo}" RUSTUP_HOME="${RUSTUP_HOME:-$real/.rustup}"
+export MISE_DATA_DIR="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$real/.local/share}/mise}"
+export MISE_CONFIG_DIR="${MISE_CONFIG_DIR:-${XDG_CONFIG_HOME:-$real/.config}/mise}"
+export MISE_CACHE_DIR="${MISE_CACHE_DIR:-${XDG_CACHE_HOME:-$real/.cache}/mise}"
+export MISE_STATE_DIR="${MISE_STATE_DIR:-${XDG_STATE_HOME:-$real/.local/state}/mise}"
+export DOCKER_CONFIG="${DOCKER_CONFIG:-$real/.docker}"
+unset XDG_DATA_HOME XDG_CONFIG_HOME XDG_CACHE_HOME XDG_STATE_HOME
+# The aspire-managed extractor finds the home via getpwuid, not via HOME: the directory is set explicitly.
+export HOME="$home" DOTNET_BUNDLE_EXTRACT_BASE_DIR="$home/.cache/dotnet_bundle_extract"
+export ASPIRE_CLI_TELEMETRY_OPTOUT=true DOTNET_CLI_TELEMETRY_OPTOUT=1
+[ -d /usr/share/dotnet ] || exec "$here/node_modules/.bin/aspire" "$@"
+exec bwrap --dev-bind / / --tmpfs /usr/share/dotnet "$here/node_modules/.bin/aspire" "$@"

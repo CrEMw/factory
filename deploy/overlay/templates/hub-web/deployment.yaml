@@ -1,0 +1,117 @@
+kind: Deployment
+spec:
+  # With replicas: 1 the generated maxUnavailable: 1 allows killing the only pod before the new one is ready.
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    spec:
+      nodeSelector: '{{=- toYaml .Values.nodeSelector | nindent 8 }}'
+      # hub-web does not call the Kubernetes API and needs no ServiceAccount token.
+      automountServiceAccountToken: false
+      # uid and gid from hub-web/Dockerfile (USER 1000:1000).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        # Caller secret of hub-web (ExternalSecret hub-caller-hub-web, wave -1). Not optional: the pod does not start
+        # without it. hub-web picks up a changed secret without a restart (rereads the file every 30 s).
+        - name: caller-secret
+          secret:
+            secretName: hub-caller-hub-web
+            items:
+              - key: secret
+                path: secret
+        - '{{=- if .Values.secrets.remoteKeys.oidcClientSecret }}'
+        # Client secret of the OIDC entrance (ExternalSecret hub-web-oidc): a file, not an env value.
+        - name: oidc-client-secret
+          secret:
+            secretName: hub-web-oidc
+            items:
+              - key: secret
+                path: secret
+        - '{{=- end }}'
+        # Read-only root; /tmp for temporary files of Node and dependencies.
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+      containers:
+        # name is required: tools/chart.sh uses it to check that the patch lands on the same container.
+        - name: hub-web
+          # Aspire writes scheme: "http", but the API server accepts only HTTP and HTTPS (server-side dry-run).
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+          # Better Auth: tables in the auth schema of hub-db, the session and token signing key from the secret store.
+          # The role hub_web (ExternalSecret hub-db-hub-web) sees only the auth schema.
+          env:
+            - name: HUBDB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: hub-db-hub-web
+                  key: uri
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hub-web-auth
+                  key: password
+            - '{{=- if .Values.auth.providers.cloudflareAccess.enabled }}'
+            # Cloudflare Access JWT verification on the main entrance (ExternalSecret hub-web-access).
+            # optional: without them the pod runs, and sign-in through Cloudflare is refused.
+            - name: AUTH_CF_ACCESS_TEAM_DOMAIN
+              valueFrom:
+                secretKeyRef:
+                  name: hub-web-access
+                  key: team_domain
+                  optional: true
+            - name: AUTH_CF_ACCESS_AUD
+              valueFrom:
+                secretKeyRef:
+                  name: hub-web-access
+                  key: aud
+                  optional: true
+            - '{{=- end }}'
+            - '{{=- if .Values.secrets.remoteKeys.mailboxPathToken }}'
+            # Path tokens of the agent mailbox (ExternalSecret hub-web-mailbox); without them every mailbox path answers 404.
+            - name: MAILBOX_PATH_TOKENS
+              valueFrom:
+                secretKeyRef:
+                  name: hub-web-mailbox
+                  key: tokens
+                  optional: true
+            - '{{=- end }}'
+            - name: HUB_CALLER_SECRET_FILE
+              value: /var/run/secrets/hub-caller/secret
+            - '{{=- if .Values.secrets.remoteKeys.oidcClientSecret }}'
+            - name: AUTH_OIDC_CLIENT_SECRET_FILE
+              value: /var/run/secrets/oidc-client/secret
+            - '{{=- end }}'
+            # Extra env from values web.env (for example HUB_LOCALE, the interface language) and otel.endpoint.
+            - '{{=- with include "hub.extra-env" (dict "root" . "env" .Values.web.env) }}{{ nindent 12 . }}{{ end }}'
+          volumeMounts:
+            - name: caller-secret
+              mountPath: /var/run/secrets/hub-caller
+              readOnly: true
+            - '{{=- if .Values.secrets.remoteKeys.oidcClientSecret }}'
+            - name: oidc-client-secret
+              mountPath: /var/run/secrets/oidc-client
+              readOnly: true
+            - '{{=- end }}'
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          # Page rendering and response compression: 50m gave seconds of latency under CI load on the node.
+          resources:
+            requests:
+              cpu: 250m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi

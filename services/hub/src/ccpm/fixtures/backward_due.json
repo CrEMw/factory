@@ -1,0 +1,65 @@
+{
+  "name": "backward_due",
+  "comment": "Backward mode, due 20: chain A-B is placed as late as possible, PB ends at the due date.",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2
+    ],
+    "end": 20,
+    "late_by": 0,
+    "tasks": {
+      "1": [
+        14,
+        16
+      ],
+      "2": [
+        16,
+        18
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 2,
+        "start": 18,
+        "end": 20
+      }
+    }
+  },
+  "cfg": {
+    "mode": "backward",
+    "due": 20
+  }
+}

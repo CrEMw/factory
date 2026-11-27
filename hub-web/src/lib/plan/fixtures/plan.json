@@ -1,0 +1,66 @@
+{
+  "root": "tr00",
+  "scope": {
+    "id": 7,
+    "root": "tr00",
+    "summary": "Test scope: chain, feeding buffer, external blocker",
+    "due_date": "2030-01-29",
+    "mode": "forward",
+    "buffer_method": "cnp",
+    "green_a_pct": 10,
+    "red_a_pct": 30,
+    "zone_slope_pct": 60,
+    "max_defaulted_pct": 20,
+    "valid_from": "2030-01-12T02:32:57.101740Z",
+    "actor": "seed:scopes",
+    "actor_kind": "seed"
+  },
+  "source": "stored",
+  "computed_at": "2030-01-14T08:00:00Z",
+  "today": "2030-01-14",
+  "end_date": "2030-01-28",
+  "pending": false,
+  "baseline": {
+    "id": 3,
+    "approved_at": "2030-01-11T10:00:00Z",
+    "approved_by": "user:alice",
+    "approved_kind": "human",
+    "accepted_defaults": false,
+    "defaulted_pct": 15,
+    "max_defaulted_pct": 20
+  },
+  "calendar": { "epoch": "2024-01-01", "unit": "half_day", "workdays": "mon-fri" },
+  "plan": {
+    "algo_version": 2,
+    "root": 100,
+    "today": 3150,
+    "end": 3170,
+    "late_by": 0,
+    "defaulted_pct": 15,
+    "approvable": true,
+    "wsjf_root": 150,
+    "flags": ["chain_drift"],
+    "tasks": [
+      { "seq": 100, "code": "tr00", "status": "open", "assignee": null, "a": null, "a_full": null, "s": null, "start": 3150, "end": 3164, "on_chain": false, "buffer": null, "ready": false, "wsjf": null, "flags": ["umbrella"] },
+      { "seq": 101, "code": "ta01", "status": "done", "assignee": "alice", "a": 2, "a_full": 2, "s": 4, "start": null, "end": null, "on_chain": false, "buffer": null, "ready": false, "wsjf": null, "flags": [] },
+      { "seq": 102, "code": "ta02", "status": "doing", "assignee": "alice", "a": 4, "a_full": 6, "s": 8, "start": 3150, "end": 3154, "on_chain": true, "buffer": null, "ready": false, "wsjf": 300, "flags": [] },
+      { "seq": 103, "code": "ta03", "status": "open", "assignee": "bob", "a": 6, "a_full": 6, "s": 12, "start": 3154, "end": 3160, "on_chain": true, "buffer": null, "ready": false, "wsjf": 200, "flags": [] },
+      { "seq": 104, "code": "ta04", "status": "open", "assignee": "alice", "a": 3, "a_full": 3, "s": 6, "start": 3155, "end": 3158, "on_chain": false, "buffer": "fb:105", "ready": true, "wsjf": null, "flags": ["estimate_defaulted", "wsjf_missing"] },
+      { "seq": 105, "code": "ta05", "status": "open", "assignee": "bob", "a": 4, "a_full": 4, "s": 8, "start": 3160, "end": 3164, "on_chain": true, "buffer": null, "ready": false, "wsjf": 125, "flags": [] },
+      { "seq": 106, "code": "ta06", "status": "open", "assignee": null, "a": 3, "a_full": 3, "s": 6, "start": 3159, "end": 3162, "on_chain": false, "buffer": "fb:finish", "ready": false, "wsjf": null, "flags": ["estimate_defaulted", "external_blocker", "unassigned", "wsjf_missing"] },
+      { "seq": 108, "code": "tc01", "status": "open", "assignee": "alice", "a": null, "a_full": null, "s": null, "start": null, "end": null, "on_chain": false, "buffer": null, "ready": false, "wsjf": null, "flags": ["in_cycle"], "cycle": ["tc01", "c2", "tc01"] }
+    ],
+    "chain": [
+      { "seq": 102, "resource_link": false },
+      { "seq": 103, "resource_link": false },
+      { "seq": 105, "resource_link": true }
+    ],
+    "buffers": [
+      { "key": "pb", "kind": "project", "entry": null, "tasks": [102, 103, 105], "size": 6, "start": 3164, "end": 3170, "compressed": false, "chain_complete_pct": 20, "consumed_pct": 33, "zone": "yellow", "penetration": 1100 },
+      { "key": "fb:105", "kind": "feeding", "entry": 105, "tasks": [104], "size": 2, "start": 3158, "end": 3160, "compressed": false, "chain_complete_pct": 0, "consumed_pct": 0, "zone": "green", "penetration": -1000 },
+      { "key": "fb:finish", "kind": "feeding", "entry": null, "tasks": [106], "size": 2, "start": 3162, "end": 3164, "compressed": true, "chain_complete_pct": null, "consumed_pct": null, "zone": null, "penetration": null }
+    ],
+    "ignored_edges": [],
+    "resource_warnings": [{ "assignee": "bob", "seq": 103, "after": 102, "reason": "prev_half_done" }]
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "comment": "Zone boundary points with default settings (green_a 10, red_a 30, slope 60): [chain_complete, consumed, zone]. A boundary belongs to the calmer zone.",
+  "rows": [
+    [0, -50, "green"], [0, 10, "green"], [0, 11, "yellow"], [0, 30, "yellow"], [0, 31, "red"],
+    [50, 40, "green"], [50, 41, "yellow"], [50, 60, "yellow"], [50, 61, "red"],
+    [100, 70, "green"], [100, 71, "yellow"], [100, 90, "yellow"], [100, 91, "red"],
+    [1, 10, "green"], [3, 11, "green"], [1, 11, "yellow"]
+  ]
+}

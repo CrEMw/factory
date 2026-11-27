@@ -1,0 +1,90 @@
+{{- if .Values.ingress.cloudflared.enabled }}
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "cloudflared-deployment"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "cloudflared"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+        app.kubernetes.io/component: "cloudflared"
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - image: "{{ .Values.ingress.cloudflared.image }}"
+          name: "cloudflared"
+          readinessProbe:
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            httpGet:
+              scheme: "HTTP"
+              path: "/ready"
+              port: 2000
+          args:
+            - "tunnel"
+            - "--no-autoupdate"
+            - "--protocol"
+            - "{{ .Values.ingress.cloudflared.protocol }}"
+            - "--metrics"
+            - "0.0.0.0:2000"
+            - "run"
+          ports:
+            - name: "metrics"
+              protocol: "TCP"
+              containerPort: 2000
+          imagePullPolicy: "IfNotPresent"
+          # cloudflared tunnel run takes the run token from TUNNEL_TOKEN.
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.ingress.cloudflared.tokenSecret }}
+                  key: token
+          # Verified in Docker: tunnel run starts with a read-only root and no capabilities.
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+      # Next to hub-web: the path Cloudflare -> cloudflared -> hub-web stays on one node.
+      nodeSelector: {{- toYaml .Values.nodeSelector | nindent 8 }}
+      # The connector does not need the Kubernetes API.
+      automountServiceAccountToken: false
+      # The cloudflared image runs as nonroot (65532); numeric, so that kubelet can verify runAsNonRoot.
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+      app.kubernetes.io/component: "cloudflared"
+      app.kubernetes.io/instance: "{{ .Release.Name }}"
+  replicas: 1
+  revisionHistoryLimit: 3
+  # One replica: with the generated maxUnavailable: 1 the tunnel would be down during a rollout.
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: "RollingUpdate"
+{{- end }}

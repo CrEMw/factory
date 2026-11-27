@@ -1,0 +1,132 @@
+{
+  "name": "cycle",
+  "comment": "A -> B -> C -> A cycle: excluded with in_cycle and a path of codes, D after C with blocked_by_cycle. D and E belong to bob: with equal keys D [0,2), E [2,4); chain D-E with a resource link, PB 2.",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 4,
+        "code": "D",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 5,
+        "code": "E",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      },
+      {
+        "src": 2,
+        "dst": 3
+      },
+      {
+        "src": 3,
+        "dst": 1
+      },
+      {
+        "src": 3,
+        "dst": 4
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      4,
+      5
+    ],
+    "resource_links": [
+      5
+    ],
+    "end": 6,
+    "tasks": {
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": [
+        0,
+        2
+      ],
+      "5": [
+        2,
+        4
+      ]
+    },
+    "flags": {
+      "1": [
+        "in_cycle"
+      ],
+      "2": [
+        "in_cycle"
+      ],
+      "3": [
+        "in_cycle"
+      ],
+      "4": [
+        "blocked_by_cycle"
+      ]
+    },
+    "cycle": {
+      "1": [
+        "A",
+        "B",
+        "C",
+        "A"
+      ],
+      "3": [
+        "A",
+        "B",
+        "C",
+        "A"
+      ]
+    },
+    "ready": [
+      5
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: "hub-db-hub-web"
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+# Template and data: an array and a label key with dots, withField in the AppHost cannot express them. Secret of the
+# database role hub_web of hub-db from a secret store key (random_password, written by the platform Terraform).
+# CNPG needs the basic-auth type and username (passwordSecret in spec.managed.roles, deploy/overlay/templates/hub/db.yaml),
+# the label cnpg.io/reload makes it reread the password when the secret changes; hub-web reads uri (HUBDB_URI).
+# The password has no special characters (special = false), so uri needs no encoding. Backquotes: the ESO template
+# text passes through Helm as is.
+spec:
+  refreshInterval: "1h"
+  secretStoreRef:
+    kind: "{{ .Values.secrets.store.kind }}"
+    name: "{{ .Values.secrets.store.name }}"
+  target:
+    name: "hub-db-hub-web"
+    creationPolicy: "Owner"
+    template:
+      engineVersion: v2
+      type: kubernetes.io/basic-auth
+      metadata:
+        labels:
+          cnpg.io/reload: "true"
+      data:
+        username: hub_web
+        password: "{{ `{{ .password }}` }}"
+        uri: "postgresql://hub_web:{{ `{{ .password }}` }}@hub-db-rw.{{ .Release.Namespace }}:5432/app"
+  data:
+    - secretKey: password
+      remoteRef:
+        key: {{ .Values.secrets.remoteKeys.dbHubWeb }}

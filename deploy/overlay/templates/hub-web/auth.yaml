@@ -1,0 +1,8 @@
+kind: ExternalSecret
+# The data array: withField in the AppHost cannot express it. The key password of the secret hub-web-auth
+# (BETTER_AUTH_SECRET of hub-web, deploy/overlay/templates/hub-web/deployment.yaml) from the secret store.
+spec:
+  data:
+    - secretKey: password
+      remoteRef:
+        key: '{{= .Values.secrets.remoteKeys.webAuthSecret }}'

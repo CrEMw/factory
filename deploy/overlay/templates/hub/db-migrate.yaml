@@ -1,0 +1,58 @@
+kind: Job
+# Fields the TypeScript AppHost cannot express. tools/chart.sh merges this file into the generated template.
+# Only the pod of this Job holds the password of the owner app: hub and hub-web do not see it. Network: the Job only
+# needs hub-db 5432 and DNS inside the namespace; it calls nothing else (OTLP is not set).
+metadata:
+  labels:
+    app.kubernetes.io/component: hub-db-migrate
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: "{{ .Chart.Name }}"
+        app.kubernetes.io/component: hub-db-migrate
+        app.kubernetes.io/instance: "{{ .Release.Name }}"
+    spec:
+      nodeSelector: '{{=- toYaml .Values.nodeSelector | nindent 8 }}'
+      # uid and gid from services/Dockerfile (USER 65532:65532).
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        # name is required: tools/chart.sh uses it to check that the patch lands on the same container.
+        - name: migrate
+          # The same image as the Deployment hub: a release carries the chart and the digest of one commit.
+          image: "{{ .Values.parameters.hub.hub_image }}"
+          imagePullPolicy: IfNotPresent
+          # The binary, not a script in args: hub migrate applies the embedded migrations and exits; with
+          # hub.migrations.adoptChecksums it first adopts the baseline on a chain database (docs/migrations.md).
+          args: '{{= ternary "[migrate, --adopt]" "[migrate]" (not (empty .Values.hub.migrations.adoptChecksums)) }}'
+          env:
+            - name: HUBDB_MIGRATE_URI
+              valueFrom:
+                secretKeyRef:
+                  name: hub-db-app
+                  key: uri
+            # Install settings (services/hub/src/config.rs): required, no default; the same block in the Job
+            # hub-db-migrate and in the Deployment hub. The account is written to public.instance once.
+            - '{{=- include "hub.instance-env" . | nindent 12 }}'
+            - '{{=- with .Values.hub.migrations.adoptChecksums }}'
+            - name: HUB_ADOPT_CHECKSUMS
+              value: '{{= . | quote }}'
+            - '{{=- end }}'
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          # A namespace quota may require requests and limits; a completed pod does not count against it.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 500m
+              memory: 128Mi

@@ -1,0 +1,9 @@
+kind: ExternalSecret
+# The data array: withField in the AppHost cannot express it. Caller secret of hub-web from a secret store key
+# (random_password, written by the platform Terraform). hub (volume callers,
+# deploy/overlay/templates/hub/deployment.yaml) and hub-web (volume caller-secret) read it.
+spec:
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: '{{= index .Values.secrets.remoteKeys.callers "hub-web" | required "secrets.remoteKeys.callers.hub-web" }}'

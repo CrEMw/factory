@@ -1,0 +1,139 @@
+{
+  "name": "external_blocker",
+  "comment": "X outside the scope with a projection of 6 holds A as a milestone; Y without a projection: milestone C at today, C in the network with the external_blocker flag, not ready; Z is done, B is free. With equal keys SSGS takes the smaller seq: A [6,8), B after A for alice [8,10). PB 2 = ceil((2+2)/2) after B [10,12). C is a sink outside the critical chain: fb:finish ceil(2/2) = 1 [9,10), C as late as possible [7,9).",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "A",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 2,
+        "code": "B",
+        "status": "open",
+        "assignee": "alice",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      },
+      {
+        "seq": 3,
+        "code": "C",
+        "status": "open",
+        "assignee": "bob",
+        "estimate": {
+          "effort_sp": 1,
+          "aggressive_hd": 2
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 100,
+        "dst": 1
+      },
+      {
+        "src": 101,
+        "dst": 3
+      },
+      {
+        "src": 102,
+        "dst": 2
+      }
+    ],
+    "external": [
+      {
+        "seq": 100,
+        "code": "X",
+        "status": "open",
+        "forecast_end": 6
+      },
+      {
+        "seq": 101,
+        "code": "Y",
+        "status": "doing"
+      },
+      {
+        "seq": 102,
+        "code": "Z",
+        "status": "done"
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2
+    ],
+    "resource_links": [
+      2
+    ],
+    "end": 12,
+    "tasks": {
+      "1": [
+        6,
+        8
+      ],
+      "2": [
+        8,
+        10
+      ],
+      "3": [
+        7,
+        9
+      ]
+    },
+    "buffers": {
+      "pb": {
+        "size": 2,
+        "start": 10,
+        "end": 12,
+        "tasks": [
+          1,
+          2
+        ]
+      },
+      "fb:finish": {
+        "size": 1,
+        "start": 9,
+        "end": 10,
+        "tasks": [
+          3
+        ]
+      }
+    },
+    "flags": {
+      "1": [
+        "external_milestone"
+      ],
+      "3": [
+        "external_blocker"
+      ]
+    },
+    "no_buffer": [],
+    "ready": [
+      2
+    ]
+  },
+  "next": [
+    {
+      "assignee": "alice",
+      "seq": 2,
+      "flags": []
+    },
+    {
+      "assignee": "bob",
+      "seq": null,
+      "flags": []
+    }
+  ]
+}

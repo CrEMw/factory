@@ -1,0 +1,2 @@
+kind: ScheduledBackup
+x-helm-if: .Values.backup.enabled

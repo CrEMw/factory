@@ -1,0 +1,10 @@
+kind: ExternalSecret
+x-helm-if: .Values.secrets.remoteKeys.oidcClientSecret
+# The data array: withField in the AppHost cannot express it. Client secret of the OIDC entrance from the secret store;
+# hub-web reads it as the file AUTH_OIDC_CLIENT_SECRET_FILE (volume oidc-client-secret,
+# deploy/overlay/templates/hub-web/deployment.yaml), never as an env value.
+spec:
+  data:
+    - secretKey: secret
+      remoteRef:
+        key: '{{= .Values.secrets.remoteKeys.oidcClientSecret }}'

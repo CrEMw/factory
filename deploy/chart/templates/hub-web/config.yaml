@@ -1,0 +1,19 @@
+---
+apiVersion: "v1"
+kind: "ConfigMap"
+metadata:
+  name: "hub-web-config"
+  labels:
+    app.kubernetes.io/name: "{{ .Values.nameOverride | default .Chart.Name }}"
+    app.kubernetes.io/component: "hub-web"
+    app.kubernetes.io/instance: "{{ .Release.Name }}"
+data:
+  NODE_ENV: "{{ .Values.config.hub_web.NODE_ENV }}"
+  PORT: "{{ .Values.config.hub_web.PORT }}"
+  HUB_HTTP: "{{ .Values.config.hub_web.HUB_HTTP }}"
+  services__hub__http__0: "{{ .Values.config.hub_web.services__hub__http__0 }}"
+  HOST: "{{ .Values.config.hub_web.HOST }}"
+  HOSTNAME: "{{ .Values.config.hub_web.HOSTNAME }}"
+  ORIGIN: "{{ .Values.origin }}"
+  AUTH_TAILSCALE_HOSTS: "{{ .Values.auth.providers.tailscale.host }}"
+  AUTH_EXTRA_ORIGINS: "{{ .Values.auth.extraOrigins }}"

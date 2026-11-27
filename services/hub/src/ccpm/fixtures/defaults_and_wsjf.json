@@ -1,0 +1,134 @@
+{
+  "name": "defaults_and_wsjf",
+  "comment": "Default estimates: bug 2, feature 5 (maximum over tags), anything else 3 points, 1 point = 1 half-day, except points_to_hd 5 -> 7. The whole chain is defaulted: defaulted_pct 100, cannot be approved. Root WSJF: (5+3+2 + 1+1+1) * 100 / (3 + 2) = 260; a task without an estimate gets the wsjf_missing flag.",
+  "today": 0,
+  "input": {
+    "root": 100,
+    "tasks": [
+      {
+        "seq": 1,
+        "code": "F",
+        "status": "open",
+        "assignee": "alice",
+        "tags": [
+          "bug",
+          "feature"
+        ]
+      },
+      {
+        "seq": 2,
+        "code": "G",
+        "status": "open",
+        "assignee": "alice",
+        "tags": [
+          "chore"
+        ]
+      },
+      {
+        "seq": 3,
+        "code": "H",
+        "status": "open",
+        "assignee": "alice"
+      },
+      {
+        "seq": 4,
+        "code": "W",
+        "status": "open",
+        "estimate": {
+          "effort_sp": 3
+        },
+        "wsjf": {
+          "business_value": 5,
+          "time_criticality": 3,
+          "risk_opportunity": 2
+        }
+      },
+      {
+        "seq": 5,
+        "code": "V",
+        "status": "done",
+        "estimate": {
+          "effort_sp": 8
+        },
+        "wsjf": {
+          "business_value": 21,
+          "time_criticality": 21,
+          "risk_opportunity": 21
+        }
+      },
+      {
+        "seq": 6,
+        "code": "U",
+        "status": "open",
+        "estimate": {
+          "effort_sp": 2
+        },
+        "wsjf": {
+          "business_value": 1,
+          "time_criticality": 1,
+          "risk_opportunity": 1
+        }
+      }
+    ],
+    "blocks": [
+      {
+        "src": 1,
+        "dst": 2
+      },
+      {
+        "src": 2,
+        "dst": 3
+      }
+    ]
+  },
+  "expect": {
+    "chain": [
+      1,
+      2,
+      3
+    ],
+    "tasks": {
+      "1": [
+        0,
+        7
+      ],
+      "2": [
+        7,
+        9
+      ],
+      "3": [
+        9,
+        12
+      ]
+    },
+    "defaulted_pct": 100,
+    "approvable": false,
+    "wsjf_root": 260,
+    "a": {
+      "1": 7,
+      "2": 2,
+      "3": 3,
+      "4": 3,
+      "6": 2
+    },
+    "wsjf": {
+      "4": 333,
+      "6": 150,
+      "1": null
+    },
+    "flags": {
+      "1": [
+        "estimate_defaulted",
+        "wsjf_missing"
+      ],
+      "4": [
+        "unassigned"
+      ]
+    }
+  },
+  "cfg": {
+    "points_to_hd": {
+      "5": 7
+    }
+  }
+}

@@ -1,0 +1,2 @@
+kind: ObjectStore
+x-helm-if: .Values.backup.enabled
