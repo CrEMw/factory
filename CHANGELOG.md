@@ -13,6 +13,11 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 - `hub.seed.files` in the chart values: installation seeds as `{<path>: <content>}`, rendered into the ConfigMap
   `hub-seed`, mounted at `HUB_SEED_DIR` with `HUB_SEED_REQUIRED` true; a changed seed rolls `hub`.
 
+### Security
+
+- `hub-web`: markdown-it 15.0.3 (was 15.0.1).
+- `apphost`: minimatch 11.0.1 for the linter dependencies (was 10.2.6).
+
 ## [0.1.0] - 2026-11-27
 
 ### Added
