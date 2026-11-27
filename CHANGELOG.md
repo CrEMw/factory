@@ -6,6 +6,10 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+### Removed
+
+- The empty `/seed` directory in the hub image: installation seeds come only from chart values (`hub.seed.files`).
+
 ## [0.1.1] - 2026-11-27
 
 ### Added
