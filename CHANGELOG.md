@@ -6,6 +6,11 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+### Fixed
+
+- Cluster `hub-db` with `backup.enabled: false` no longer renders a null `spec.plugins` (rejected by schema
+  validation such as kubeconform): it renders an empty list.
+
 ### Removed
 
 - The empty `/seed` directory in the hub image: installation seeds come only from chart values (`hub.seed.files`).
