@@ -31,7 +31,7 @@ against that row at startup.
 | `HUBDB_URI` | none, required for the service | `hub`, `hub migrate` | Postgres connection URI. In the chart: the `uri` key of the secret `hub-db-hub` (role `hub`). |
 | `HUBDB_MIGRATE_URI` | falls back to `HUBDB_URI` | `hub migrate` | Connection URI of the migration owner. In the chart: the `uri` key of the CNPG secret `hub-db-app`. |
 | `PORT` | none, required | `hub` | HTTP port. The chart sets `8000` (`config.hub.PORT`). |
-| `HUB_MIGRATIONS` | `chain` | `hub`, `hub migrate` | `chain` or `baseline`, see [migrations.md](migrations.md). Any other value is refused. |
+| `HUB_MIGRATIONS` | `chain` where the build has the chain, else `baseline` | `hub`, `hub migrate` | `chain` or `baseline`, see [migrations.md](migrations.md). Any other value is refused; `chain` too in a build without the chain. |
 | `HUB_ADOPT_CHECKSUMS` | none | `hub migrate --adopt` | Expected journal of the migration chain, one `<version> <sha384 hex>` per line, see [migrations.md](migrations.md). |
 | `HUB_CALLERS_DIR` | unset | `hub` | Directory of caller secrets: one file per caller, the file name is the caller name, the content its secret. Reread every 30 seconds. The chart mounts it at `/var/run/secrets/hub-callers`. |
 | `HUB_CALLERS_REQUIRED` | `false` | `hub` | `true` or `1`: refuse to start without caller secrets. Without secrets and without this flag, `/api` is open to anyone who reaches the port (local runs only). The chart sets `true`. |

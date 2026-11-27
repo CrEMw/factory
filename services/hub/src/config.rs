@@ -374,6 +374,7 @@ mod tests {
     }
 
     /// The Rust default is the column default of public.instance (0027): an unset env changes nothing in a fresh database.
+    #[cfg(chain)]
     #[test]
     fn default_link_labels_are_the_column_default() {
         let migration = include_str!("../migrations/0027_document_link_labels.sql");
@@ -381,6 +382,18 @@ mod tests {
             migration.contains(&format!("DEFAULT '{DEFAULT_DOCUMENT_LINK_LABELS}'::jsonb")),
             "0027 has another default"
         );
+    }
+
+    /// The same against the baseline (1000), the schema of every new installation, present in every tree.
+    #[test]
+    fn default_link_labels_are_the_baseline_column_default() {
+        let baseline = include_str!("../baseline/1000_baseline.sql");
+        let (_, rest) = baseline
+            .split_once("document_link_labels jsonb DEFAULT '")
+            .expect("baseline has the column document_link_labels");
+        let (default, _) = rest.split_once("'::jsonb").unwrap();
+        let parse = |s: &str| serde_json::from_str::<serde_json::Value>(s).unwrap();
+        assert_eq!(parse(default), parse(DEFAULT_DOCUMENT_LINK_LABELS));
     }
 
     #[test]

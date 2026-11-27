@@ -10,7 +10,7 @@
 #   web               hub-web: pnpm install, build, check, test;
 #   node-tests        npm ci in .tools, then node --test tools/test-*.mjs;
 #   chart             AppHost (npm ci, aspire restore), tools/chart.sh, deploy/chart without drift;
-#   pg-schema         a no-op without services/hub/baseline: tools/canonical-bodies.sh --check, then, where docker is,
+#   pg-schema         a no-op without services/hub/baseline or the chain services/hub/migrations: tools/canonical-bodies.sh --check, then, where docker is,
 #                     tools/test-pg-schema.sh (the migration chain and the baseline give the same catalog,
 #                     services/hub/pg-schema.sql, on a real Postgres). canonical-bodies.sh is trusted like the scripts
 #                     below: next to this file if it is there, otherwise from origin/main of the checked repo, with
@@ -139,6 +139,11 @@ part_apphost() {
 part_pg_schema() {
   if [ ! -d services/hub/baseline ]; then
     echo "pg-schema: no services/hub/baseline, nothing to check"
+    return 0
+  fi
+  # A tree with only the baseline (no chain services/hub/migrations) has nothing to compare it with.
+  if [ ! -d services/hub/migrations ]; then
+    echo "pg-schema: no migration chain services/hub/migrations, nothing to check"
     return 0
   fi
   # The trusted generator: next to check.sh (locally the same repo), else origin/main of the checked repo (CI may put

@@ -3,12 +3,14 @@
 // verbatim; a baseline change without a migration that carries the new text fails, the default mode prints that text.
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 
 const root = new URL('../', import.meta.url).pathname;
+// The canonical migrations are part of the chain: a tree with only the baseline has nothing to check.
+const chainOnly = { skip: existsSync(join(root, 'services/hub/migrations')) ? false : 'no migration chain in this tree' };
 const script = join(root, 'tools/canonical-bodies.sh');
 const run = (dir, ...args) => spawnSync('sh', [script, '--root', dir, ...args], { encoding: 'utf8' });
 
@@ -27,19 +29,19 @@ function changeBaseline(dir) {
   writeFileSync(baseline(dir), text.slice(0, i + 17) + 'changed: ' + text.slice(i + 17));
 }
 
-test('the repository passes: the canonical migrations reproduce the baseline', () => {
+test('the repository passes: the canonical migrations reproduce the baseline', chainOnly, () => {
   const r = run(root, '--check');
   assert.equal(r.status, 0, r.stderr);
   assert.equal(run(root).stdout, '', 'nothing missing');
 });
 
-test('--stdout prints every function, view and comment of the baseline as CREATE OR REPLACE / COMMENT ON', () => {
+test('--stdout prints every function, view and comment of the baseline as CREATE OR REPLACE / COMMENT ON', chainOnly, () => {
   const out = execFileSync('sh', [script, '--stdout'], { encoding: 'utf8' });
   assert.ok(out.split('\nCREATE OR REPLACE FUNCTION ').length > 50);
   assert.doesNotMatch(out, /\nCREATE (FUNCTION|VIEW)/);
 });
 
-test('a baseline change without a migration is stale; the printed text in a new migration fixes it', (t) => {
+test('a baseline change without a migration is stale; the printed text in a new migration fixes it', chainOnly, (t) => {
   const dir = copy(t);
   changeBaseline(dir);
   const stale = run(dir, '--check');
@@ -56,7 +58,7 @@ test('a baseline change without a migration is stale; the printed text in a new 
   assert.equal(run(dir, '--check').status, 1);
 });
 
-test('a function or comment that the baseline does not have fails; a DROP forgets it', (t) => {
+test('a function or comment that the baseline does not have fails; a DROP forgets it', chainOnly, (t) => {
   const dir = copy(t);
   const migration = join(dir, 'services/hub/migrations/0099_test.sql');
   writeFileSync(migration, `CREATE FUNCTION public.zz_test() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;
@@ -69,7 +71,7 @@ COMMENT ON FUNCTION public.zz_test() IS 'x';\n`);
   assert.equal(run(dir, '--check').status, 0);
 });
 
-test('a DROP of several names forgets each of them', (t) => {
+test('a DROP of several names forgets each of them', chainOnly, (t) => {
   const dir = copy(t);
   writeFileSync(join(dir, 'services/hub/migrations/0099_test.sql'), `CREATE FUNCTION public.zz_a(a int, b text) RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;
 CREATE VIEW public.zz_v AS SELECT 1 AS x;
@@ -80,7 +82,7 @@ DROP VIEW IF EXISTS public.zz_v CASCADE;\n`);
   assert.equal(r.status, 0, r.stderr);
 });
 
-test('migrations before 0028 do not count', (t) => {
+test('migrations before 0028 do not count', chainOnly, (t) => {
   const dir = copy(t);
   writeFileSync(join(dir, 'services/hub/migrations/0027_zz_test.sql'), 'CREATE FUNCTION public.zz_test() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$;\n');
   assert.equal(run(dir, '--check').status, 0);

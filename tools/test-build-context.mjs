@@ -38,7 +38,10 @@ test('every compile-time embedded file of services/ lies inside services/', () =
     }
   }
   assert.ok(found.length > 0, 'no embedded files found: the pattern no longer matches the code');
+  // The migration chain is embedded only where its directory exists (cfg `chain`, services/hub/build.rs).
+  const chain = join(services, 'hub/migrations');
   for (const { file, path } of found) {
+    if (!existsSync(chain) && !relative(chain, path).startsWith('..')) continue;
     const where = relative(root, file);
     assert.ok(!relative(services, path).startsWith('..'), `${where} embeds ${relative(root, path)}, outside the build context services/`);
     assert.ok(existsSync(path), `${where} embeds ${relative(root, path)}, which does not exist`);

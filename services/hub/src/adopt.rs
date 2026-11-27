@@ -116,7 +116,7 @@ fn decode_hex(s: &str) -> anyhow::Result<Vec<u8>> {
 }
 
 /// The HUB_ADOPT_CHECKSUMS text of a migrator (tests build the expected journal from the embedded chain).
-#[cfg(test)]
+#[cfg(all(test, chain))]
 pub fn checksums_of(m: &sqlx::migrate::Migrator) -> String {
     m.iter()
         .filter(|x| !x.migration_type.is_down_migration())
@@ -363,6 +363,7 @@ mod tests {
         }
     }
 
+    #[cfg(chain)]
     #[test]
     fn embedded_chain_checksums_round_trip() {
         let chain = crate::migrations::chain();

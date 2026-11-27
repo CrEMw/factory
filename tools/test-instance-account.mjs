@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
-import { migrationFiles, migrationSql } from './hub-migrations.mjs';
+import { hasChain, migrationFiles, migrationSql } from './hub-migrations.mjs';
 
 const { PGlite } = await import(new URL('../.tools/node_modules/@electric-sql/pglite/dist/index.js', import.meta.url));
 const root = new URL('../', import.meta.url);
@@ -169,7 +169,8 @@ const walk = async (dir, exts) => {
 await test('every INSERT into tickets in hub, hub-web and migrations names project', async () => {
   const files = [
     ...(await walk('services/hub/src/', ['.rs'])),
-    ...(await walk('services/hub/migrations/', ['.sql'])),
+    ...(hasChain ? await walk('services/hub/migrations/', ['.sql']) : []),
+    ...(await walk('services/hub/baseline/', ['.sql'])),
     ...(await walk('hub-web/src/', ['.ts', '.js', '.svelte'])),
   ];
   let seen = 0;

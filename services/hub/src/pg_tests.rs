@@ -2259,7 +2259,9 @@ async fn logins_own_mailbox_keys() {
 mod chain;
 
 /// `hub migrate --adopt` (steps 2.12c and 2.15, src/adopt.rs, docs/migrations.md): the baseline migrator explicitly, whatever
-/// HUB_MIGRATIONS says. Each test has its own database built by the chain (or empty).
+/// HUB_MIGRATIONS says. Each test has its own database built by the chain (or empty), so they exist where the chain does
+/// (cfg `chain` from build.rs).
+#[cfg(chain)]
 mod adopt_tests {
     use sqlx::{PgPool, postgres::PgPoolOptions};
 

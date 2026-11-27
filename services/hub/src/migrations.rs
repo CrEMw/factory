@@ -16,10 +16,13 @@ use sqlx::{
 use crate::config::Config;
 
 /// Which embedded migrations an installation runs: env HUB_MIGRATIONS (step 2.15 of the factory plan, docs/migrations.md).
-/// `chain` (the default, also when unset or empty) is services/hub/migrations; `baseline` is the single baseline
-/// services/hub/baseline/1000_baseline.sql. Any other value is refused before connecting.
+/// `chain` is services/hub/migrations, `baseline` the single baseline services/hub/baseline/1000_baseline.sql. The chain
+/// exists only in a build that has the directory migrations (cfg `chain` from build.rs); there it is also the default
+/// (unset or empty). A build without it has only the baseline: unset or empty is `baseline`, `chain` is refused. Any other
+/// value is refused before connecting.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Source {
+    #[cfg(chain)]
     Chain,
     Baseline,
 }
@@ -31,7 +34,16 @@ impl Source {
 
     pub fn parse(v: Option<&str>) -> anyhow::Result<Self> {
         match v.map(str::trim) {
+            #[cfg(chain)]
             None | Some("" | "chain") => Ok(Self::Chain),
+            #[cfg(not(chain))]
+            None | Some("") => Ok(Self::Baseline),
+            #[cfg(not(chain))]
+            Some("chain") => {
+                anyhow::bail!(
+                    "HUB_MIGRATIONS=chain: this build has no migration chain, only `baseline`"
+                )
+            }
             Some("baseline") => Ok(Self::Baseline),
             Some(other) => {
                 anyhow::bail!("HUB_MIGRATIONS={other:?}: expected `chain` or `baseline`")
@@ -41,6 +53,7 @@ impl Source {
 
     pub fn migrator(self) -> Migrator {
         match self {
+            #[cfg(chain)]
             Self::Chain => chain(),
             Self::Baseline => baseline(),
         }
@@ -62,7 +75,9 @@ pub fn baseline() -> Migrator {
     m
 }
 
-/// The migration chain services/hub/migrations: the default migrator, and the database that `hub migrate --adopt` adopts.
+/// The migration chain services/hub/migrations: the default migrator where it is built (cfg `chain`), and the database that
+/// `hub migrate --adopt` adopts.
+#[cfg(chain)]
 pub fn chain() -> Migrator {
     let mut m = sqlx::migrate!();
     m.set_ignore_missing(true);
@@ -213,14 +228,24 @@ mod source_tests {
 
     #[test]
     fn hub_migrations_selects_the_source_and_refuses_anything_else() {
-        for v in [None, Some(""), Some("chain"), Some(" chain ")] {
-            assert_eq!(Source::parse(v).unwrap(), Source::Chain, "{v:?}");
+        #[cfg(chain)]
+        {
+            for v in [None, Some(""), Some("chain"), Some(" chain ")] {
+                assert_eq!(Source::parse(v).unwrap(), Source::Chain, "{v:?}");
+            }
+            assert!(Source::Chain.migrator().iter().all(|x| x.version < 1000));
+        }
+        #[cfg(not(chain))]
+        {
+            for v in [None, Some(""), Some(" ")] {
+                assert_eq!(Source::parse(v).unwrap(), Source::Baseline, "{v:?}");
+            }
+            assert!(Source::parse(Some("chain")).is_err());
         }
         assert_eq!(Source::parse(Some("baseline")).unwrap(), Source::Baseline);
         for v in ["Baseline", "base", "1000", "chain,baseline"] {
             assert!(Source::parse(Some(v)).is_err(), "{v:?}");
         }
-        assert!(Source::Chain.migrator().iter().all(|x| x.version < 1000));
         assert_eq!(
             Source::Baseline
                 .migrator()

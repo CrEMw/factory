@@ -4,15 +4,17 @@ Steps 2.12 and 2.15 of the factory plan. Code: `services/hub/src/migrations.rs`,
 
 ## Two migrators
 
-- **Chain** (`HUB_MIGRATIONS` unset, empty or `chain`): `services/hub/migrations/NNNN_*.sql`, versions 1-14 and 17-29 (15 and 16 were never
+- **Chain** (`HUB_MIGRATIONS` unset, empty or `chain`, in a build that has the chain): `services/hub/migrations/NNNN_*.sql`, versions 1-14 and 17-29 (15 and 16 were never
   merged). Files are frozen: sqlx stores a SHA-384 checksum of each file in `public._sqlx_migrations`, and the
   service refuses to start when a checksum differs (`migrations::verify`).
-- **Baseline** (`HUB_MIGRATIONS=baseline`): `services/hub/baseline/1000_baseline.sql`, one file, version 1000. It
+- **Baseline** (`HUB_MIGRATIONS=baseline`; unset or empty in a build without the chain): `services/hub/baseline/1000_baseline.sql`, one file, version 1000. It
   gives the same catalog as the whole chain (`sh tools/test-pg-schema.sh`). It carries the schema and its
   dictionaries, not the rows of installation registries: those come from the seed directory (`HUB_SEED_DIR`).
 
-One build carries both; env `HUB_MIGRATIONS` of `hub migrate` and of the service picks one, any other value is
-refused before connecting:
+A build from a tree with the directory `services/hub/migrations` carries both (cfg `chain` from `services/hub/build.rs`);
+env `HUB_MIGRATIONS` of `hub migrate` and of the service picks one, any other value is refused before connecting. A tree
+without that directory builds only the baseline: unset or empty is `baseline`, `chain` is refused, and the tests that
+need a chain database (adopt, the chain replay) are not built.
 
 ```sh
 hub migrate                                   # chain

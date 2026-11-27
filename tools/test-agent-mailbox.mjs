@@ -2,12 +2,11 @@
 // no network and no database address. The cases were carried over from the former cockpit mailbox spec.
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 
+import { hasChain, migrationFiles, migrationSql } from './hub-migrations.mjs';
+
 const { PGlite } = await import(new URL('../.tools/node_modules/@electric-sql/pglite/dist/index.js', import.meta.url));
-const root = new URL('../', import.meta.url);
-const read = (path) => readFile(new URL(path, root), 'utf8');
 
 const T0 = Date.parse('2030-01-16T10:00:00Z');
 const at = (ms) => new Date(T0 + ms).toISOString();
@@ -15,12 +14,17 @@ const keyId = (key) => 'sha256:' + createHash('sha256').update(key).digest('hex'
 const ALICE = keyId('e'.repeat(40));
 const BOB = keyId('m'.repeat(40));
 
-const migrations = (await readdir(new URL('services/hub/migrations/', root))).filter((f) => f.endsWith('.sql')).sort();
+// The chain, or the baseline in a tree without it (tools/hub-migrations.mjs).
+const migrations = await migrationFiles();
 const migrate = async (db, files) => {
-  for (const file of files) await db.exec('BEGIN;\n' + (await read('services/hub/migrations/' + file)) + '\nCOMMIT;');
+  for (const file of files) await db.exec('BEGIN;\n' + (await migrationSql(file)) + '\nCOMMIT;');
 };
-// The one legacy source that 0008 allowed by a literal, read from that migration, not repeated here.
-const SOURCE_0008 = (await read('services/hub/migrations/0008_agent_mailbox.sql')).match(/check \(source = '([^']+)'\)/)[1];
+// The one legacy source that 0008 allowed by a literal, read from that migration, not repeated here. Only the chain has it:
+// the two tests of that history are skipped without it.
+const SOURCE_0008 = hasChain
+  ? (await migrationSql('0008_agent_mailbox.sql')).match(/check \(source = '([^']+)'\)/)[1]
+  : null;
+const chainOnly = { skip: hasChain ? false : 'no migration chain in this tree' };
 
 // legacy: the source of the legacy history import the installation expects (public.instance.mailbox_legacy_import);
 // upTo: apply only the migrations before this file name (the rest with m.migrate()).
@@ -222,7 +226,7 @@ const literals = (m, text) =>
     [text]
   );
 
-await test('an installation that imported before 0029 keeps its source and an open mailbox', async (t) => {
+await test('an installation that imported before 0029 keeps its source and an open mailbox', chainOnly, async (t) => {
   const m = await fresh(t, { upTo: '0029' });
   await m.importHistory({ ...history, source: SOURCE_0008 });
   assert.equal((await m.exchange(ALICE, 'alice-a', 'before', 60_000)).status, 'approved');
@@ -242,7 +246,7 @@ await test('an installation that imported before 0029 keeps its source and an op
   assert.deepEqual(await literals(m, SOURCE_0008), { procs: 0, constraints: 0 });
 });
 
-await test('the chain leaves no legacy source literal in functions and constraints; a source is never empty', async (t) => {
+await test('the chain leaves no legacy source literal in functions and constraints; a source is never empty', chainOnly, async (t) => {
   const m = await fresh(t);
   assert.deepEqual(await literals(m, SOURCE_0008), { procs: 0, constraints: 0 });
   await assert.rejects(m.sql(`UPDATE public.instance SET mailbox_legacy_import = '' WHERE id`), /instance_mailbox_legacy_import_check/);
