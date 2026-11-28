@@ -132,6 +132,8 @@ CloudNativePG `Cluster` named `hub-db`.
 | `db.resources.limits.memory` | `512Mi` | |
 | `db.roleComments.hub` | `null` | `COMMENT ON ROLE` of `hub`; `null`: a neutral text. |
 | `db.roleComments.hubWeb` | `null` | `COMMENT ON ROLE` of `hub_web`; `null`: a neutral text. |
+| `db.podMonitor.enabled` | `false` | PodMonitor `hub-db` for the Prometheus Operator (metrics port of the CNPG instances). Needs the PodMonitor CRD. |
+| `db.podMonitor.labels` | `{}` | Extra labels of the PodMonitor for the `podMonitorSelector` of Prometheus, for example `release: <kube-prometheus-stack release>`. |
 
 ### Backups
 
