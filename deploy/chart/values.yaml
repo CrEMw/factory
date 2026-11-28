@@ -57,6 +57,11 @@ db:
   roleComments:
     hub: null
     hubWeb: null
+  # PodMonitor hub-db for the Prometheus Operator (templates/hub/db-podmonitor.tpl). Needs the PodMonitor CRD.
+  # labels: extra labels for the podMonitorSelector of Prometheus, for example release: <kube-prometheus-stack release>.
+  podMonitor:
+    enabled: false
+    labels: {}
 backup:
   # barman-cloud backups to Azure Blob: ObjectStore, ScheduledBackup and the WAL archiver only when enabled.
   enabled: false

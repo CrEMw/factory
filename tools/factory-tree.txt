@@ -49,6 +49,7 @@ deploy/chart/templates/hub/db-daily.yaml
 deploy/chart/templates/hub/db-hub-web.yaml
 deploy/chart/templates/hub/db-hub.yaml
 deploy/chart/templates/hub/db-migrate.yaml
+deploy/chart/templates/hub/db-podmonitor.tpl
 deploy/chart/templates/hub/db.yaml
 deploy/chart/templates/hub/deployment.yaml
 deploy/chart/templates/hub/seed.yaml
@@ -73,6 +74,7 @@ deploy/overlay/templates/hub/db-daily.yaml
 deploy/overlay/templates/hub/db-hub-web.yaml
 deploy/overlay/templates/hub/db-hub.yaml
 deploy/overlay/templates/hub/db-migrate.yaml
+deploy/overlay/templates/hub/db-podmonitor.tpl
 deploy/overlay/templates/hub/db.yaml
 deploy/overlay/templates/hub/deployment.yaml
 deploy/overlay/templates/hub/seed.yaml
