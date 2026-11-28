@@ -6,6 +6,11 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+### Fixed
+
+- The agent mailbox feed on narrow screens: the message text takes a full-width line under the time and the agent
+  instead of a narrow column beside them.
+
 ## [0.1.2] - 2026-11-27
 
 ### Fixed

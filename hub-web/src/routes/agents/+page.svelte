@@ -127,6 +127,16 @@
     border-bottom: 1px solid var(--line);
     overflow-wrap: anywhere;
   }
+  /* On a phone the text takes its own full-width line under the time and the agent. */
+  @media (max-width: 600px) {
+    .msg {
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 2px 10px;
+    }
+    .msg > span {
+      grid-column: 1 / -1;
+    }
+  }
   .new {
     margin: 8px 0 0;
     color: var(--accent);
