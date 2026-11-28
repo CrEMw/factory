@@ -15,13 +15,7 @@ spec:
   retentionPolicy: "{{ .Values.backup.retention }}"
   configuration:
     destinationPath: "{{ .Values.backup.destinationPath }}"
-    azureCredentials:
-      storageAccount:
-        name: "hub-db-backup-storage"
-        key: "AZURE_STORAGE_ACCOUNT"
-      storageKey:
-        name: "hub-db-backup-storage"
-        key: "AZURE_STORAGE_KEY"
+    azureCredentials: {{- include "hub.db-azure-credentials" . | nindent 6 }}
     wal:
       compression: "gzip"
     data:

@@ -27,7 +27,7 @@ spec:
     nodeSelector: {{- toYaml .Values.nodeSelector | nindent 6 }}
   # plugin-barman-cloud writes backups and WAL to the ObjectStore hub-db-backups (AppHost) when backup.enabled
   # (hub.db-plugins in _helpers.tpl); the AppHost cannot express the array.
-  plugins: {{- include "hub.db-plugins" . | nindent 4 }}
+  plugins: {{- include "hub.db-plugins" . | nindent 4 }}{{- with include "hub.db-workload-identity" . }}{{ . | nindent 2 }}{{- end }}
   # Service roles: migration 0021_db_roles.sql grants the rights, the passwords come from the ExternalSecret secrets
   # hub-db-hub and hub-db-hub-web (wave -3). The owner app and its secret hub-db-app stay for migrations.
   # CRD defaults (ensure, inherit, connectionLimit) are written out so that Argo sees no drift.

@@ -117,8 +117,9 @@ another name sets `nameOverride`.
 
 `deploy/overlay/templates/**/*.tpl` are copied unchanged:
 
-- `_helpers.tpl`: the shared env blocks (`hub.instance-env`, `hub.extra-env`) and the caller volume sources
-  (`hub.caller-sources`);
+- `_helpers.tpl`: the shared env blocks (`hub.instance-env`, `hub.extra-env`), the caller volume sources
+  (`hub.caller-sources`) and the backup blocks of the Cluster and the ObjectStore (`hub.db-plugins`,
+  `hub.db-workload-identity`, `hub.db-azure-credentials`, checked by `hub.db-backup-credentials`);
 - `hub/caller-extra.tpl`: one ExternalSecret `hub-caller-<name>` per entry of `hub.callers`, since the AppHost cannot
   loop over values.
 

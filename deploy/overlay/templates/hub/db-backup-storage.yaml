@@ -1,5 +1,5 @@
 kind: ExternalSecret
-x-helm-if: .Values.backup.enabled
+x-helm-if: and .Values.backup.enabled (eq .Values.backup.azure.credentials "storageKey")
 # The data array: withField in the AppHost cannot express it. Storage account key from the secret store
 # (written by the platform Terraform); the account name comes from values backup.azure.account.
 spec:

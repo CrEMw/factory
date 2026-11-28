@@ -107,6 +107,8 @@ if (publish) {
         await m.withField('spec.retentionPolicy', '{{ .Values.backup.retention }}');
         // Keep the path byte for byte: a different path is a new archive for barman, and the WAL chain breaks.
         await m.withField('spec.configuration.destinationPath', '{{ .Values.backup.destinationPath }}');
+        // deploy/overlay replaces azureCredentials by backup.azure.credentials (hub.db-azure-credentials in
+        // _helpers.tpl); the storage key references below are kept so that the storageKey render stays the same.
         await m.withField('spec.configuration.azureCredentials.storageAccount.name', 'hub-db-backup-storage');
         await m.withField('spec.configuration.azureCredentials.storageAccount.key', 'AZURE_STORAGE_ACCOUNT');
         await m.withField('spec.configuration.azureCredentials.storageKey.name', 'hub-db-backup-storage');

@@ -1,2 +1,5 @@
 kind: ObjectStore
 x-helm-if: .Values.backup.enabled
+spec:
+  configuration:
+    azureCredentials: '{{=- include "hub.db-azure-credentials" . | nindent 6 }}'

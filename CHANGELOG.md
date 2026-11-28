@@ -6,6 +6,13 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+### Added
+
+- `backup.azure.credentials` and `backup.azure.clientId` in the chart values: `workloadIdentity` authenticates the
+  barman-cloud plugin to Azure Blob Storage through Azure workload identity of the service account `hub-db`
+  (annotation and pod label on Cluster `hub-db`, `useDefaultAzureCredentials` on the `ObjectStore`, no storage key
+  ExternalSecret). The default `storageKey` renders as before.
+
 ## [0.1.3] - 2026-11-28
 
 ### Fixed
