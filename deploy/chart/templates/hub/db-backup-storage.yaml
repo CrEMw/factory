@@ -1,4 +1,4 @@
-{{- if .Values.backup.enabled }}
+{{- if and .Values.backup.enabled (eq .Values.backup.azure.credentials "storageKey") }}
 ---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret

@@ -46,7 +46,14 @@ backup:
   # barman-cloud backups to Azure Blob: ObjectStore, ScheduledBackup and the WAL archiver only when enabled.
   enabled: false
   azure:
+    # How the barman-cloud plugin authenticates to Azure Blob Storage: storageKey (account key from the secret store,
+    # secrets.remoteKeys.backupStorageKey) or workloadIdentity (Azure workload identity of the Cluster's service
+    # account hub-db).
+    credentials: storageKey
+    # Storage account name; storageKey only.
     account: ""
+    # Client id of the managed identity federated with system:serviceaccount:<namespace>:hub-db; workloadIdentity only.
+    clientId: ""
   # Byte for byte: a different path is a new archive for barman, and the WAL chain breaks.
   destinationPath: ""
   retention: 14d

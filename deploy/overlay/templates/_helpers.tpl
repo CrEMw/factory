@@ -105,3 +105,49 @@ when backup.enabled; else an empty list, not null (a null plugins fails schema v
 []
 {{- end }}
 {{- end }}
+
+{{/* backup.azure.credentials, checked on every render (the Cluster renders without backup.enabled too). */}}
+{{- define "hub.db-backup-credentials" -}}
+{{- $a := .Values.backup.azure -}}
+{{- if not (has $a.credentials (list "storageKey" "workloadIdentity")) }}
+{{- fail (printf "backup.azure.credentials: %v, expected storageKey or workloadIdentity" $a.credentials) }}
+{{- end }}
+{{- if and (eq $a.credentials "workloadIdentity") (not $a.clientId) }}
+{{- fail "backup.azure.clientId: required with backup.azure.credentials: workloadIdentity" }}
+{{- end }}
+{{- $a.credentials -}}
+{{- end }}
+
+{{/* Spec keys of Cluster hub-db after plugins (templates/hub/db.yaml) for backup.azure.credentials: workloadIdentity:
+the client id on the service account hub-db and the label azure.workload.identity/use on the instance pods, so the
+workload identity webhook injects the federated token into postgres and the barman-cloud sidecar. Independent of
+backup.enabled: an install can roll the identity out first and turn backups on in a second rollout. Empty for
+storageKey. */}}
+{{- define "hub.db-workload-identity" -}}
+{{- if eq (include "hub.db-backup-credentials" .) "workloadIdentity" -}}
+serviceAccountTemplate:
+  metadata:
+    annotations:
+      azure.workload.identity/client-id: {{ .Values.backup.azure.clientId | toString | quote }}
+inheritedMetadata:
+  labels:
+    azure.workload.identity/use: "true"
+{{- end }}
+{{- end }}
+
+{{/* spec.configuration.azureCredentials of the ObjectStore hub-db-backups (templates/hub/db-backups.yaml). It replaces
+the storage key references the AppHost writes. storageKey: account name and key from the ExternalSecret
+hub-db-backup-storage. workloadIdentity: DefaultAzureCredential of the barman-cloud sidecar, which picks up the
+federated token of the service account hub-db; no secret. */}}
+{{- define "hub.db-azure-credentials" -}}
+{{- if eq (include "hub.db-backup-credentials" .) "workloadIdentity" -}}
+useDefaultAzureCredentials: true
+{{- else -}}
+storageAccount:
+  name: "hub-db-backup-storage"
+  key: "AZURE_STORAGE_ACCOUNT"
+storageKey:
+  name: "hub-db-backup-storage"
+  key: "AZURE_STORAGE_KEY"
+{{- end }}
+{{- end }}

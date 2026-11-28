@@ -106,7 +106,7 @@ The chart reads secrets through External Secrets Operator.
 | `secrets.store.name` | `hub-secrets` | Name of the secret store. |
 | `secrets.remoteKeys.dbHub` | `hub-db-hub` | Password of the database role `hub`. |
 | `secrets.remoteKeys.dbHubWeb` | `hub-db-hub-web` | Password of the database role `hub_web`. |
-| `secrets.remoteKeys.backupStorageKey` | `hub-backup-storage-key` | Storage account key for backups. |
+| `secrets.remoteKeys.backupStorageKey` | `hub-backup-storage-key` | Storage account key for backups; only with `backup.azure.credentials: storageKey`. |
 | `secrets.remoteKeys.webAuthSecret` | `hub-web-auth-secret` | `BETTER_AUTH_SECRET` of hub-web. |
 | `secrets.remoteKeys.accessTeamDomain` | `hub-web-access-team-domain` | Cloudflare Access team domain. |
 | `secrets.remoteKeys.accessAud` | `hub-web-access-aud` | Cloudflare Access application audience. |
@@ -138,10 +138,28 @@ CloudNativePG `Cluster` named `hub-db`.
 barman-cloud backups to Azure Blob Storage through the CNPG barman-cloud plugin. The `ObjectStore`,
 `ScheduledBackup`, storage ExternalSecret and WAL archiver are rendered only when enabled.
 
+The plugin authenticates to Blob Storage in one of two ways, set by `backup.azure.credentials`:
+
+- `storageKey` (the default): the storage account name from `backup.azure.account` and its key from the secret
+  store (`secrets.remoteKeys.backupStorageKey`), brought in by the ExternalSecret `hub-db-backup-storage`.
+- `workloadIdentity`: Azure workload identity of the Cluster's service account `hub-db`. The Cluster carries the
+  annotation `azure.workload.identity/client-id` on that service account and the label
+  `azure.workload.identity/use: "true"` on its pods, and the `ObjectStore` uses `useDefaultAzureCredentials: true`.
+  No storage ExternalSecret is rendered, and `secrets.remoteKeys.backupStorageKey` and `backup.azure.account` are
+  ignored. It needs the workload identity webhook in the cluster, a managed identity with a federated credential for
+  `system:serviceaccount:<namespace>:hub-db` (audience `api://AzureADTokenExchange`), and the role Storage Blob Data
+  Contributor on the container.
+
+The Cluster's identity fields render independently of `backup.enabled`, so an install can roll the identity out
+first and turn backups on in a second rollout. A value other than `storageKey` or `workloadIdentity`, or
+`workloadIdentity` without `backup.azure.clientId`, fails the render.
+
 | Key | Default | Meaning |
 |---|---|---|
 | `backup.enabled` | `false` | Turn backups on. |
-| `backup.azure.account` | `""` | Storage account name. |
+| `backup.azure.credentials` | `storageKey` | How the plugin authenticates: `storageKey` or `workloadIdentity`. |
+| `backup.azure.account` | `""` | Storage account name; `storageKey` only. |
+| `backup.azure.clientId` | `""` | Client id of the managed identity federated with the service account `hub-db`; required with `workloadIdentity`. |
 | `backup.destinationPath` | `""` | Destination path. Keep it byte for byte: a different path is a new archive, and the WAL chain breaks. |
 | `backup.retention` | `14d` | Retention policy of backups and WAL. |
 | `backup.schedule` | `"0 30 3 * * *"` | Base backup schedule (six-field cron). The first backup runs on creation. |

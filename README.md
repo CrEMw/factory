@@ -79,7 +79,8 @@ The cluster needs:
 - CloudNativePG for the database (`hub-db`);
 - External Secrets Operator and a secret store named by `secrets.store.kind` and
   `secrets.store.name`; the keys it must hold are listed under `secrets.remoteKeys`;
-- the barman-cloud CNPG plugin, only with `backup.enabled: true`.
+- the barman-cloud CNPG plugin, only with `backup.enabled: true`;
+- the Azure workload identity webhook, only with `backup.azure.credentials: workloadIdentity`.
 
 Ingress through Tailscale (`ingress.tailscale`) and the Cloudflare tunnel connector (`ingress.cloudflared`) are
 optional and off by default.
