@@ -6,6 +6,13 @@ The format is based on Keep a Changelog 1.1.0, and this project adheres to Seman
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-28
+
+### Added
+
+- Optional PodMonitor for the `hub-db` Cluster: `db.podMonitor.enabled` (false by default) and `db.podMonitor.labels`,
+  so a cluster Prometheus that selects PodMonitors by label can scrape the CloudNativePG exporter.
+
 ## [0.1.3] - 2026-11-28
 
 ### Fixed
